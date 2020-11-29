@@ -1,0 +1,21 @@
+For now, let's design a 2v2 game for the Ai design to be better. Let's have it so there are the moves set
+Have 3 touches in general, and for the 3 touches, let it be bump, set, spike moveset every time.
+
+BUMP:
+- Upper hand
+- Lower hand
+- Direction will go automatically the same trajectory it came from, but it can switch if another directional key is pressed
+
+SET
+- mid air
+- minus tempo: 0
+- 1st tempo: 1
+- 2nd temp: 2
+- 3rd temp: 3
+GAGE: Increases time it stays in air until spike gage shows up
+
+SPIKE
+- Dink
+- Cross
+- Straight (automatic)
+- Set a gage
