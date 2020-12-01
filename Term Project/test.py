@@ -1,3 +1,8 @@
+# 112_pong.py
+
+# This is a simplified version of Pong, one of the earliest
+# arcade games.  We have kept it simple for learning purposes.
+
 from cmu_112_graphics import *
 
 def appStarted(app):

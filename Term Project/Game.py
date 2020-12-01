@@ -7,8 +7,7 @@ from tkinter import *
 
 class HomeScreen(App):
     def appStarted(self):
-        self.counter = 0
-        self.image1 = self.loadImage('haikyuu gifs.gif')
+        self.image1 = self.loadImage('background1.jpg')
         self.image2 = self.scaleImage(self.image1, 5)
 
     def keyPressed(self, event):
@@ -17,12 +16,12 @@ class HomeScreen(App):
     def mousePressed(self, event): 
         if event.x >= self.width/2-125 and event.x <= self.width/2+125:
             if event.y >= self.height/2 - 25 and event.y <= self.height/2 + 25:
-                MatchOptions(width=1366, height=705)
+                MatchOptions(width=1920, height=1080)
 
 
     def redrawAll(self, canvas):
         canvas.create_rectangle(0,0,self.width,self.height, fill = "#ffeeda")
-        canvas.create_image(self.width/2, self.height/2, image=ImageTk.PhotoImage(self.image2))
+        canvas.create_image(self.width/2, self.height/2, image=ImageTk.PhotoImage(self.image1))
         #Title
         canvas.create_rectangle(self.width/2 +500, 10, self.width/2 - 500, 160,
                             fill = "#f49030", width = 3)
@@ -42,9 +41,11 @@ class HomeScreen(App):
 
 class MatchOptions(App):
     def appStarted(self):
-        self.PlayerCount = 0
-        self.Difficulty = "Easy"
-        self.counter = 0
+        self.boxFillSelected = "#008080"
+        self.boxFillStandard = "#f49030"
+        self.image1 = self.loadImage('haikyuubackground2.jpg')
+        #Have button change color later
+
     Teamlist = [
             "America",
             "Karasuno",
@@ -56,47 +57,50 @@ class MatchOptions(App):
         ] #expand list later
     Team1 = random.choice(Teamlist)
     Team2 = random.choice(Teamlist)
+    PlayerCount = 0
+    Difficulty = "Easy"
 
-    def keyPressed(self, event):
-        self.counter += 1
 
     def mousePressed(self, event):
         #### Number of Players ####
         #when clicking on the 1 box
         if event.y >= self.height/2 - 25 and event.y <= self.height/2 + 25:
             if event.x >= self.width/4 and event.x <= int(self.width/3):
-                self.PlayerCount = 1
+                MatchOptions.PlayerCount = 1
         #when clicking on the 2 box
         if event.y >= self.height/2 - 25 and event.y <= self.height/2 + 25:
             if event.x >= int(self.width/3) and event.x <= int(self.width* 5/12):
-                self.PlayerCount = 2
+                MatchOptions.PlayerCount = 2
         #when clicking on the 6 box
         if event.y >= self.height/2 - 25 and event.y <= self.height/2 + 25:
             if event.x >= int(self.width* 5/12) and event.x <= self.width/2:
-                self.PlayerCount = 6       
+                MatchOptions.PlayerCount = 6       
         #### Difficulty ####
         #when clicking on the 1 box
         if event.y >= self.height/2 + 75 and event.y <= self.height/2 + 125:
             if event.x >= self.width/4 and event.x <= int(self.width/3):
-                self.Difficulty = "Easy"
+                MatchOptions.Difficulty = "Easy"
         #when clicking on the 2 box
         if event.y >= self.height/2 + 75 and event.y <= self.height/2 + 125:
             if event.x >= int(self.width/3) and event.x <= int(self.width* 5/12):
-                self.Difficulty = "Medium"
+                MatchOptions.Difficulty = "Medium"
         #when clicking on the 6 box
         if event.y >= self.height/2 + 75 and event.y <= self.height/2 + 125:
             if event.x >= int(self.width* 5/12) and event.x <= self.width/2:
-                self.Difficulty = "Hard"     
+                MatchOptions.Difficulty = "Hard"     
         #Continue is pressed
         if event.y >= self.height - 100 and event.y <= self.height - 50:
             if event.x >= self.width - 120 and event.x <= self.width - 20:
-                Sides(width=1366, height=705)
-    def redrawAll(self, canvas):
-        canvas.create_rectangle(0,0,self.width,self.height,fill = "#ffeeda")
+                Sides(width=1920, height=1080)
+    
+    def drawTitle(self, canvas):
         #Title
         canvas.create_rectangle(self.width/2 +500, 10, self.width/2 - 500, 160,
                             fill = "#f49030", width = 3)
         canvas.create_text(self.width/2, 85, text = "Match Options", font = "Arial 40 bold")
+
+
+    def drawPlayerCount(self, canvas):
         #Player counts
         canvas.create_text(self.width/8, self.height/2, text= "Player Count", font = "Arial 20 bold")
         playerCountButton1 = canvas.create_rectangle(self.width/4, self.height/2 - 25, int(self.width/3), self.height/2 + 25,
@@ -108,6 +112,9 @@ class MatchOptions(App):
         playerCountButton6 = canvas.create_rectangle(int(self.width* 5/12), self.height/2 - 25, self.width/2, self.height/2 + 25,
                             fill = "#f49030", width = 2)
         canvas.create_text((int(self.width* 5/12) + self.width/2)//2, self.height/2, text = "6", font = "Arial 20 bold")
+
+
+    def drawDifficulty(self, canvas):
         #Difficulty
         canvas.create_text(self.width/8, self.height/2+100, text= "Difficulty", font = "Arial 20 bold")
         playerCountButton1 = canvas.create_rectangle(self.width/4, self.height/2 + 75, int(self.width/3), self.height/2 + 125,
@@ -119,10 +126,22 @@ class MatchOptions(App):
         playerCountButton6 = canvas.create_rectangle(int(self.width* 5/12), self.height/2 + 75, self.width/2, self.height/2 + 125,
                             fill = "#f49030", width = 2)
         canvas.create_text((int(self.width* 5/12) + self.width/2)//2, self.height/2 + 100, text = "Hard", font = "Arial 20 bold")
-        canvas.create_text(self.width - 50, 50, text = f"{self.PlayerCount}, \n{self.Difficulty}, \n{MatchOptions.Team1}", font = "Arial 12 bold")        
+        canvas.create_text(self.width - 50, 50, text = f"{self.PlayerCount}, \n{self.Difficulty}, \n{MatchOptions.Team1}", font = "Arial 12 bold")  
+
+    def drawContinueButton(self, canvas):
         #Continue
         canvas.create_rectangle(self.width-120, self.height - 100, self.width-20, self.height-50, fill = "#f49030", width = 2)
         canvas.create_text(self.width-70, self.height-75, text = "Continue", font = "Arial 18 bold")
+
+    def redrawAll(self, canvas):
+        canvas.create_rectangle(0,0,self.width,self.height,fill = "#ffeeda")
+        canvas.create_image(self.width/2, self.height/2, image=ImageTk.PhotoImage(self.image1))
+        MatchOptions.drawTitle(self, canvas)
+        MatchOptions.drawPlayerCount(self, canvas)
+        MatchOptions.drawDifficulty(self, canvas)
+        MatchOptions.drawContinueButton(self, canvas)
+        
+
 
 class Sides(App):
     #In this code, we want the different players to select a certain side of the match,
@@ -145,7 +164,7 @@ class Sides(App):
         self.player2Y = self.height/2 + 100
         self.Team1List = ",".join(self.playersInTeam1)
         self.Team2List = ",".join(self.playersInTeam2)
-
+        self.image1 = self.loadImage('brazilVolley.jpg')
 
     def keyPressed(self, event):
         if event.key == 'a':
@@ -199,6 +218,7 @@ class Sides(App):
                         self.player2X -= 500
                         self.player2Y = 705/2 + 135
                         self.player1Y = 705/2
+
         if event.key == "Right":
             if self.Player2 not in self.playersInTeam2:
                 if self.Player2 in self.playersInTeam1:
@@ -219,24 +239,25 @@ class Sides(App):
         #Continue is pressed
         if event.y >= self.height - 100 and event.y <= self.height - 50:
             if event.x >= self.width - 120 and event.x <= self.width - 20:
-                Match(width=1366, height=705)
-    #def moveIconToRight(self):
-    #    pass
+                Match(width=1920, height=1080)
+
+
+
     def redrawAll(self, canvas):
         canvas.create_rectangle(0,0,self.width,self.height,fill = "#ffeeda")
+        canvas.create_image(self.width/2, self.height/2, image=ImageTk.PhotoImage(self.image1))
         #Title
         canvas.create_rectangle(self.width/2 +500, 10, self.width/2 - 500, 160,
                             fill = "#f49030", width = 3)
         canvas.create_text(self.width/2, 85, text = "Choose Sides", font = "Arial 40 bold")
         #Continue
-        
         canvas.create_rectangle(self.width-120, self.height - 100, self.width-20, self.height-50, fill = "#f49030", width = 2)
         canvas.create_text(self.width-70, self.height-75, text = "Continue", font = "Arial 18 bold")
         #canvas.create_text(self.width/4, self.height/2 - 50, text = f'{self.Team1}', font = "Arial 25 bold")
         #canvas.create_text((self.width * 3/4), self.height/2 - 50, text = f'{self.Team2}', font = "Arial 25 bold")
-        canvas.create_text(self.width/2 - 450, 200, text = f"{self.Team1}", font = "Arial 24 bold")
+        canvas.create_text(self.width/2 - 450, 200, text = f"{self.Team1}", font = "Arial 30 bold")
         #Do the same with Team 2 on the right
-        canvas.create_text(self.width/2 + 450, 200, text = f"{self.Team2}", font = "Arial 24 bold")
+        canvas.create_text(self.width/2 + 450, 200, text = f"{self.Team2}", font = "Arial 30 bold")
         canvas.create_image(self.player1X, self.player1Y, image=ImageTk.PhotoImage(self.PlayerIcon1))
         canvas.create_image(self.player2X, self.player2Y, image=ImageTk.PhotoImage(self.PlayerIcon2))
 
@@ -251,14 +272,17 @@ class Sides(App):
             #now make team2 have only AI's 
         else:
             team2Text = ", ".join(self.playersInTeam2)
-        canvas.create_text(self.width/2, self.height - 50, 
-                text = f"Team {self.Team1}: " + team1Text, font = "Arial 12 bold", fill = "#B53737")
+        canvas.create_text(self.width/2, self.height - 70, 
+                text = f"Team {self.Team1}: " + team1Text, font = "Arial 30 bold", fill = "#B53737")
         canvas.create_text(self.width/2, self.height - 30, 
-                text = f"Team {self.Team2}: " + team2Text, font = "Arial 12 bold", fill = "#1338BE")
+                text = f"Team {self.Team2}: " + team2Text, font = "Arial 30 bold", fill = "#1338BE")
 
 
 class Match(App):
+    score1 = 0
+    score2 = 0
     def appStarted(self):
+        self.gameReset = False
         Match.resetApp(self)
     
     def resetApp(self):
@@ -266,9 +290,14 @@ class Match(App):
         # This initializes most of our model (stored in app.xyz)
         # This is called when they start the app, and also after
         # the game is over when we restart the app.
+        self.topCount = 0
+        self.bottomCount = 0
+        self.rowCount = 0
+        self.row2Count = 0
+        self.top2Count = 0
+        self.bottom2Count = 0
+        self.dotOutline = "green"
         self.timerDelay = 500 # milliseconds
-        self.score1 = 0
-        self.score2 = 0
         self.waitingForKeyPress = True
         self.gameOver = False
         self.paused = False
@@ -280,6 +309,13 @@ class Match(App):
         self.dotDy = -3
         self.incrementX = 60
         self.incrementY = 3
+        if MatchOptions.Difficulty == "Easy":
+            self.ballSpeed = 10
+        elif MatchOptions.Difficulty == "Intermediate":
+            self.ballSpeed = 15
+        else:
+            self.ballSpeed = 30
+
     
     def resetTeams(self):
         self.imageNum1 = self.loadImage("number1.png")
@@ -304,10 +340,50 @@ class Match(App):
         self.ballRadius = 15
     
     def resetPlayers(self):
+        #### 1 Player #####
         self.dot1Width = self.width/2-90
         self.dot1Height = self.height/2 + 50
         self.dot2Width = self.width/2+90
         self.dot2Height = self.height/2 + 50
+
+        #### 2 Players ####
+        self.dot1WidthFront = self.width/2-90
+        self.dot1HeightFront = self.height/2 + 50
+        self.dot1WidthBack = self.width/2-340
+        self.dot1HeightBack = self.height/2 + 50
+        self.dot2WidthFront = self.width/2+90
+        self.dot2HeightFront = self.height/2 + 50
+        self.dot2WidthBack = self.width/2+340
+        self.dot2HeightBack = self.height/2 + 50
+
+        #### 6 Players ####
+        self.player1WidthTM = self.width/2-90
+        self.player1HeightTM = self.height/2 + 50
+        self.player1WidthTL = self.width/2-90
+        self.player1HeightTL = self.height/2 - 70
+        self.player1WidthTR = self.width/2 - 90
+        self.player1HeightTR = self.height/2 + 170
+        self.player1WidthBM = self.width/2-340
+        self.player1HeightBM = self.height/2 + 50
+        self.player1WidthBL = self.width/2-340
+        self.player1HeightBL = self.height/2 - 70
+        self.player1WidthBR = self.width/2-340
+        self.player1HeightBR = self.height/2 + 170
+
+        self.player2WidthTM = self.width/2+90
+        self.player2HeightTM = self.height/2 + 50
+        self.player2WidthTL = self.width/2+90
+        self.player2HeightTL = self.height/2 - 70
+        self.player2WidthTR = self.width/2+90
+        self.player2HeightTR = self.height/2 + 170
+        self.player2WidthBM = self.width/2+340
+        self.player2HeightBM = self.height/2 + 50
+        self.player2WidthBL = self.width/2+340
+        self.player2HeightBL = self.height/2 - 70
+        self.player2WidthBR = self.width/2+340
+        self.player2HeightBR = self.height/2 + 170
+
+
     '''def drawCourt(self, canvas):
         canvas.create_rectangle(0,0,self.width,self.height,fill = "#ffeeda")
         canvas.create_image(1366/2, 705/2 + 30, image=ImageTk.PhotoImage(self.courtimage))
@@ -330,64 +406,270 @@ class Match(App):
             Match.moveBall(self)
 
     def keyPressed(self, event):
-        if self.gameOver:
+        if self.gameReset:
             Match.resetApp(self)
+        elif self.gameOver:
+            MatchIsOver(width = 1920, height = 1028)
         elif self.waitingForKeyPress:
             self.waitingForKeyPress = False
         if event.key == "q":
             #switch control to the player to the left of the current one in back row
-            pass
-        if event.key == "e":
+            self.rowCount = 1
+            self.topCount += 1
+        elif event.key == "e":
             #switch control to the player to the left of the current one in front row
-            pass
+            self.bottomCount += 1
+            self.rowCount = 0
+        if event.key == "j":
+            self.row2Count = 1
+            self.top2Count += 1
+        elif event.key == "l":
+            self.bottom2Count += 1
+            self.row2Count = 0
         if event.key == 'a':
             #current player moves left
-            self.dot1Width -= 15
+            #### 1 player ####
+            if MatchOptions.PlayerCount == 1:            
+                self.dot1Width -= 15
+            #### 2 players ####
+            elif MatchOptions.PlayerCount == 2:
+                if self.topCount % 2 == 1:
+                    self.dot1WidthFront -= 15
+                else:
+                    self.dot1WidthBack -= 15
+            #### 6 players ####
+            else:
+                if self.rowCount %2 == 1:
+                    if self.topCount % 3 == 0:
+                        self.player1WidthTL -= 15
+                    elif self.topCount % 3 == 1:
+                        self.player1WidthTM -= 15
+                    elif self.topCount % 3 == 2:
+                        self.player1WidthTR -= 15
+                else:
+                    if self.bottomCount % 3 == 0:
+                        self.player1WidthBL -= 15
+                    elif self.bottomCount % 3 == 1:
+                        self.player1WidthBM -= 15
+                    elif self.bottomCount % 3 == 2:
+                        self.player1WidthBR -= 15
         elif event.key == 'd':
             #current player moves right
-            self.dot1Width += 15
+            #### 1 player ####1
+            if MatchOptions.PlayerCount == 1:            
+                self.dot1Width += 15
+            #### 2 players ####
+            elif MatchOptions.PlayerCount == 2:
+                if self.topCount % 2 == 1:
+                    self.dot1WidthFront += 15
+                else:
+                    self.dot1WidthBack += 15
+            #### 6 players ####
+            else:
+                if self.rowCount % 2 == 1:
+                    if self.topCount % 3 == 0:
+                        self.player1WidthTL += 15
+                    elif self.topCount % 3 == 1:
+                        self.player1WidthTM += 15
+                    elif self.topCount % 3 == 2:
+                        self.player1WidthTR += 15
+                else:
+                    if self.bottomCount % 3 == 0:
+                        self.player1WidthBL += 15
+                    elif self.bottomCount % 3 == 1:
+                        self.player1WidthBM += 15
+                    elif self.bottomCount % 3 == 2:
+                        self.player1WidthBR += 15
+            
         elif event.key == "s":
-            self.dot1Height += 15
+            #### 1 player ####1
+            if MatchOptions.PlayerCount == 1:            
+                self.dot1Height += 15
+            #### 2 players ####
+            elif MatchOptions.PlayerCount == 2:
+                if self.topCount % 2 == 1:
+                    self.dot1HeightFront += 15
+                else:
+                    self.dot1HeightBack += 15
+            #### 6 players ####
+            else:
+                if self.rowCount % 2 == 1:
+                    if self.topCount % 3 == 0:
+                        self.player1HeightTL += 15
+                    elif self.topCount % 3 == 1:
+                        self.player1HeightTM += 15
+                    elif self.topCount % 3 == 2:
+                        self.player1HeightTR += 15
+                else:
+                    if self.bottomCount % 3 == 0:
+                        self.player1HeightBL += 15
+                    elif self.bottomCount % 3 == 1:
+                        self.player1HeightBM += 15
+                    elif self.bottomCount % 3 == 2:
+                        self.player1HeightBR += 15
         elif event.key == "w":
-            self.dot1Height -= 15
+            #### 1 player ####1
+            if MatchOptions.PlayerCount == 1:            
+                self.dot1Height -= 15
+            #### 2 players ####
+            elif MatchOptions.PlayerCount == 2:
+                if self.topCount % 2 == 1:
+                    self.dot1HeightFront -= 15
+                else:
+                    self.dot1HeightBack -= 15
+            #### 6 players ####
+            else:
+                if self.rowCount % 2 == 1:
+                    if self.topCount % 3 == 0:
+                        self.player1HeightTL -= 15
+                    elif self.topCount % 3 == 1:
+                        self.player1HeightTM -= 15
+                    elif self.topCount % 3 == 2:
+                        self.player1HeightTR -= 15
+                else:
+                    if self.bottomCount % 3 == 0:
+                        self.player1HeightBL -= 15
+                    elif self.bottomCount % 3 == 1:
+                        self.player1HeightBM -= 15
+                    elif self.bottomCount % 3 == 2:
+                        self.player1HeightBR -= 15
+
         if event.key == 'Left':
-            #current player moves left
-            self.dot2Width -= 15 
+            #### 1 player ####
+            if MatchOptions.PlayerCount == 1:            
+                self.dot2Width -= 15
+            #### 2 players ####
+            elif MatchOptions.PlayerCount == 2:
+                if self.top2Count % 2 == 1:
+                    self.dot2WidthFront -= 15
+                else:
+                    self.dot2WidthBack -= 15
+            #### 6 players ####
+            else:
+                if self.row2Count %2 == 1:
+                    if self.top2Count % 3 == 0:
+                        self.player2WidthTL -= 15
+                    elif self.top2Count % 3 == 1:
+                        self.player2WidthTM -= 15
+                    elif self.top2Count % 3 == 2:
+                        self.player2WidthTR -= 15
+                else:
+                    if self.bottom2Count % 3 == 0:
+                        self.player2WidthBL -= 15
+                    elif self.bottom2Count % 3 == 1:
+                        self.player2WidthBM -= 15
+                    elif self.bottom2Count % 3 == 2:
+                        self.player2WidthBR -= 15
         elif event.key == 'Right':
-            #current player moves right
-            self.dot2Width += 15
+            #### 1 player ####
+            if MatchOptions.PlayerCount == 1:            
+                self.dot2Width += 15
+            #### 2 players ####
+            elif MatchOptions.PlayerCount == 2:
+                if self.top2Count % 2 == 1:
+                    self.dot2WidthFront += 15
+                else:
+                    self.dot2WidthBack += 15
+            #### 6 players ####
+            else:
+                if self.row2Count %2 == 1:
+                    if self.top2Count % 3 == 0:
+                        self.player2WidthTL += 15
+                    elif self.top2Count % 3 == 1:
+                        self.player2WidthTM += 15
+                    elif self.top2Count % 3 == 2:
+                        self.player2WidthTR += 15
+                else:
+                    if self.bottom2Count % 3 == 0:
+                        self.player2WidthBL += 15
+                    elif self.bottom2Count % 3 == 1:
+                        self.player2WidthBM += 15
+                    elif self.bottom2Count % 3 == 2:
+                        self.player2WidthBR += 15
         elif event.key == "Down":
-            self.dot2Height += 15
+            #### 1 player ####
+            if MatchOptions.PlayerCount == 1:            
+                self.dot2Height += 15
+            #### 2 players ####
+            elif MatchOptions.PlayerCount == 2:
+                if self.top2Count % 2 == 1:
+                    self.dot2HeightFront += 15
+                else:
+                    self.dot2HeightBack += 15
+            #### 6 players ####
+            else:
+                if self.row2Count % 2 == 1:
+                    if self.top2Count % 3 == 0:
+                        self.player2HeightTL += 15
+                    elif self.top2Count % 3 == 1:
+                        self.player2HeightTM += 15
+                    elif self.top2Count % 3 == 2:
+                        self.player2HeightTR += 15
+                else:
+                    if self.bottom2Count % 3 == 0:
+                        self.player2HeightBL += 15
+                    elif self.bottom2Count % 3 == 1:
+                        self.player2HeightBM += 15
+                    elif self.bottom2Count % 3 == 2:
+                        self.player2HeightBR += 15
         elif event.key == "Up":
-            self.dot2Height -= 15
+            #### 1 player ####1
+            if MatchOptions.PlayerCount == 1:            
+                self.dot2Height -= 15
+            #### 2 players ####
+            elif MatchOptions.PlayerCount == 2:
+                if self.top2Count % 2 == 1:
+                    self.dot2HeightFront -= 15
+                else:
+                    self.dot2HeightBack -= 15
+            #### 6 players ####
+            else:
+                if self.row2Count % 2 == 1:
+                    if self.top2Count % 3 == 0:
+                        self.player2HeightTL -= 15
+                    elif self.top2Count % 3 == 1:
+                        self.player2HeightTM -= 15
+                    elif self.top2Count % 3 == 2:
+                        self.player2HeightTR -= 15
+                else:
+                    if self.bottom2Count % 3 == 0:
+                        self.player2HeightBL -= 15
+                    elif self.bottom2Count % 3 == 1:
+                        self.player2HeightBM -= 15
+                    elif self.bottom2Count % 3 == 2:
+                        self.player2HeightBR -= 15
         elif event.key == "p":
             #have spike function run
             pass
+        elif event.key == "r":
+            self.gameReset = True
+        elif event.key == "0":
+            self.gameOver = True
     '''def mousePressed(self, event):
         #Continue button is pressed
         pass
     def moveIconToRight(self):
         pass'''
 
-    '''def mousePressed(self, event):
-        print(event.x, event.y)'''
+    def mousePressed(self, event):
+        print(event.x, event.y)
 
     def moveBall1(self):       
         self.ballWidth += self.dotDx
-        self.ballHeight += self.dotDy 
+        self.ballHeight += self.dotDy
         if Match.ballIntersects(self):
             if (self.dot1Width <= self.ballWidth <= self.dot1Width + 40 
             or self.dot1Height-40 <= self.ballHeight <= self.dot1Height):
+                self.ballWidth += self.incrementX
                 self.dotDx = 10
                 self.dotDy = random.choice([-self.dotDy, self.dotDy])
-                self.ballWidth += self.incrementX
-                #self.ballHeight += random.choice([-self.incrementY, self.incrementY])
+                self.ballHeight += random.choice([-self.incrementY, self.incrementY])
             elif (self.dot2Width <= self.ballWidth <= self.dot2Width + 40 
             or self.dot2Height >= self.ballHeight >= self.dot2Height - 40):
-                self.dotDx = -10
-                self.dotDy = random.choice([-self.dotDy, self.dotDy])
                 self.ballWidth -= self.incrementX
-                #self.ballHeight += random.choice([-self.incrementY, self.incrementY])
+                self.dotDx = -10
+                self.dotDy = random.choice([-self.dotDy, self.dotDy]) 
+                self.ballHeight += random.choice([-self.incrementY, self.incrementY])
         if (self.ballHeight + self.ballRadius >= self.height): #self.height
             # The dot went off the bottom!
             self.ballHeight = self.height - self.ballRadius
@@ -433,6 +715,18 @@ class Match(App):
             self.ballWidth = self.ballRadius
             self.dotDx = -self.dotDx
         elif Match.ballIntersects(self):
+            if (self.dot1Width <= self.ballWidth <= self.dot1Width + 40 
+            or self.dot1Height-40 <= self.ballHeight <= self.dot1Height):
+                #self.ballWidth += self.incrementX
+                self.dotDx = 10
+                #self.dotDy = random.choice([-self.dotDy, self.dotDy])
+                #self.ballHeight += random.choice([-self.incrementY, self.incrementY])
+            elif (self.dot2Width <= self.ballWidth <= self.dot2Width + 40 
+            or self.dot2Height >= self.ballHeight >= self.dot2Height - 40):
+                #self.ballWidth -= self.incrementX
+                self.dotDx = -10
+               #self.dotDy = random.choice([-self.dotDy, self.dotDy]) 
+                #self.ballHeight += random.choice([-self.incrementY, self.incrementY])
             # The dot hit the paddle!
             #self.score += 1 # hurray!
             self.dotDx = -self.dotDx
@@ -440,7 +734,6 @@ class Match(App):
             dToMiddleY = self.ballHeight - (self.ballHeight - self.ballRadius + self.ballHeight + self.ballRadius)/2
             dampeningFactor = 3 # smaller = more extreme bounces
             self.dotDy = dToMiddleY / dampeningFactor
-
 
 
     def ballIntersects(self):
@@ -459,10 +752,32 @@ class Match(App):
         canvas.create_text(self.width/2, 55, text = f"{self.score1} - {self.score2}", font = "Arial 40 bold")
 
     def drawTeam1(self, canvas):
-        canvas.create_oval(self.dot1Width, self.dot1Height, self.dot1Width + 40, self.dot1Height - 40, fill = "red")
+        if MatchOptions.PlayerCount == 1:
+            canvas.create_oval(self.dot1Width, self.dot1Height, self.dot1Width + 40, self.dot1Height - 40, fill = "red")
+        elif MatchOptions.PlayerCount == 2:
+            canvas.create_oval(self.dot1WidthFront, self.dot1HeightFront, self.dot1WidthFront + 40, self.dot1HeightFront - 40, fill = "red")
+            canvas.create_oval(self.dot1WidthBack, self.dot1HeightBack, self.dot1WidthBack - 40, self.dot1HeightBack - 40, fill = "red")
+        elif MatchOptions.PlayerCount == 6:
+            canvas.create_oval(self.player1WidthTM, self.player1HeightTM, self.player1WidthTM + 40, self.player1HeightTM - 40, fill = "red") #Top Middle
+            canvas.create_oval(self.player1WidthBM, self.player1HeightBM, self.player1WidthBM - 40, self.player1HeightBM - 40, fill = "red") #Back Middle
+            canvas.create_oval(self.player1WidthBL, self.player1HeightBL, self.player1WidthBL - 40, self.player1HeightBL - 40, fill = "red") #Back left in court
+            canvas.create_oval(self.player1WidthTL, self.player1HeightTL, self.player1WidthTL + 40, self.player1HeightTL - 40, fill = "red") #Top Left
+            canvas.create_oval(self.player1WidthTR, self.player1HeightTR, self.player1WidthTR + 40, self.player1HeightTR + 40, fill = "red") #Top Right
+            canvas.create_oval(self.player1WidthBR, self.player1HeightBR, self.player1WidthBR - 40, self.player1HeightBR + 40, fill = "red") #Bottom Right
 
     def drawTeam2(self, canvas):
-        canvas.create_oval(self.dot2Width, self.dot2Height, self.dot2Width + 40, self.dot2Height - 40, fill = "blue")
+        if MatchOptions.PlayerCount == 1:
+                    canvas.create_oval(self.dot2Width, self.dot2Height, self.dot2Width + 40, self.dot2Height - 40, fill = "blue")
+        elif MatchOptions.PlayerCount == 2:
+            canvas.create_oval(self.dot2WidthFront, self.dot2HeightFront, self.dot2WidthFront + 40, self.dot2HeightFront - 40, fill = "blue")
+            canvas.create_oval(self.dot2WidthBack, self.dot2HeightBack, self.dot2WidthBack - 40, self.dot2HeightBack - 40, fill = "blue")
+        elif MatchOptions.PlayerCount == 6:
+            canvas.create_oval(self.player2WidthTM, self.player2HeightTM, self.player2WidthTM + 40, self.player2HeightTM - 40, fill = "blue") #Top Middle
+            canvas.create_oval(self.player2WidthBM, self.player2HeightBM, self.player2WidthBM - 40, self.player2HeightBM - 40, fill = "blue") #Back Middle
+            canvas.create_oval(self.player2WidthBL, self.player2HeightBL, self.player2WidthBL - 40, self.player2HeightBL - 40, fill = "blue") #Back left in court
+            canvas.create_oval(self.player2WidthTL, self.player2HeightTL, self.player2WidthTL + 40, self.player2HeightTL - 40, fill = "blue") #Top Left
+            canvas.create_oval(self.player2WidthTR, self.player2HeightTR, self.player2WidthTR + 40, self.player2HeightTR + 40, fill = "blue") #Top Right
+            canvas.create_oval(self.player2WidthBR, self.player2HeightBR, self.player2WidthBR - 40, self.player2HeightBR + 40, fill = "blue") #Bottom Right
 
     def drawVolleyBall(self, canvas):
         '''canvas.create_oval(self.ballWidth-self.ballRadius, 
@@ -484,24 +799,26 @@ class Match(App):
         Match.drawTeam1(self, canvas)
         Match.drawTeam2(self, canvas)
 
-class Player(App):
-    def __init__(self, playerNumber, country, position, number):
-        self.playerNumber = playerNumber
-        self.country = country
-        self.position = position
-        self.number = number
-    
-    def bump(self):
-        #reduce ball velocity, hit it like to front or across court
-        #send ball to setter
-        pass
-
-    def toss(self):
-        #this is default set
-        #set to person to the right or middle
-        pass
-
-    
-
+class MatchIsOver(App):
+    def appStarted(self):
+        self.message = "Game Over"
+        self.message2 = "Player 1 is the WINNER"
+        self.message3 = "Player 2 is the WINNER"
+        self.background = self.loadImage("SunnyBackground.jpg")
+        self.Team1 = MatchOptions.Team1
+        self.Team2 = MatchOptions.Team2
         
-HomeScreen(width=1366, height=705)
+    def redrawAll(self, canvas):
+        canvas.create_image(self.width/2, self.height/2, image=ImageTk.PhotoImage(self.background))
+        if Match.score1 > Match.score2:
+            canvas.create_text(self.width/2, self.height/2, 
+                text = self.message + f"\nTeam {self.Team1} wins." + self.message2, font = "Arial 30 bold", fill = "#B53737")
+        elif Match.score2 > Match.score1:
+            canvas.create_text(self.width/2, self.height/2, 
+                text = self.message + f"\nTeam {self.Team2} wins." + self.message3, font = "Arial 30 bold", fill = "#1338BE")
+        else:
+            canvas.create_text(self.width/2, self.height/2, 
+                text = self.message + "\nNeither Team Wins", font = "Arial 30 bold", fill = "black")
+
+
+HomeScreen(width=1920, height=1080)

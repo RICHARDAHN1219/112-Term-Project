@@ -1,0 +1,85 @@
+STRUCTURE
+
+
+CLASS HOME
+- Construct the properties of the homescreen
+- Implement the buttons to press which are
+    - Play button
+    - Tutorial Button
+    - Controls Button
+
+If the tutorial button is pressed, run the tutorials page
+CLASS TUTORIAL:
+- Include the roles of each player
+- Include the basic rules the game follows
+- Have a list of tactics and moves that are used, and button combinations for those
+
+CLASS CONTROLS:
+- Includes a list of keybinds and bidns for the controller, 
+    which present what button or joystick performs what action
+- In a table format when presented on the screen
+
+If play is pressed, then run the match options page:
+
+CLASS MATCHOPTIONS:
+- The options will be available to select through buttons or with the joystick and button selection
+- First option is number of players. This will change how the AI's move across the courts and perform moves
+- Second option is difficulty. The difficulty will alter how the CPU plays the game on the opposing side
+- Have this page have a button to continue to SIDES page
+
+CLASS SIDES:
+- Let the page have two randomly selected or purposely chosen countries from a dropdown list
+- Let the player1, and if there is a player2, select what side they want to be on
+- Continue to the MATCH page
+
+CLASS MATCH
+- Generate the court
+- Generate the ball
+- Generate the players with respect to what team and number of players there are
+- Have there be an indicator for what player is being selected then
+- Implement a hit gauge and a visual to indicate the timing to press/hold the button for the different moves
+- Standard method of digging will be having player in path of ball and pressing a certian button to dig it
+- Have there be different ways of swapping between players for different numbers of players on the court
+- Let the code run on timerFired for the moving velocity of the ball, 
+    and ensure the ball moves within the bounds of the screen
+- Have a timer in 2D to estimate when the ball is hitting the ground
+- Implement gravitational force when in 3D
+- In keyPressed, map moving, swapping between characters, hitting, and the pause menu interaction keys
+- Implement more for the controller afterwards
+- Have a ballIntersects function to determine that the ball met with a certain player,
+    and depending on the player's role, to have a certain list of moves available to be performed
+- Have the gap calculator between each player, and have all designated gap areas to have
+    their values input into a list that can constantly switch the values in the list
+- Have the game AI select from this gap calculator and choose where to hit the ball in a certain area
+    or where to prevent some other players like where the blocker would be
+- Each rally begins with the serve
+-	When serving, provide a little option on the side of the player
+	- Have a counter in the corner for 5 seconds until button pressed for serve
+	- Have a little indication (like a shooting bar in fifa or 2k) where it estimates the quality of the type of serve being served
+	- Types of serve to include in the little option side: Float, jump, topspin
+- For different difficulties, have different ways of choosing a move. For easy, have random selection, but have hard AI's process
+    the gaps and character positions. This way the hard AI would choose the ideal spot with a faster ball speed
+- Have game end when the points in the third set reach 25 or if there is a deuce at 24 - 24, until there is a 2-point difference
+- Run the MATCHOVER page
+
+CLASS MATCHOVER
+- Print message showing which player won, including when the player quits in the middle of the game
+ - Have a background in here, as well as buttons that allow for a rematch (which reruns Match) Match Analysis, or Home
+
+CLASS MATCHANALYSIS
+- Provides an option on which team to analyze
+- Have a dropdown list on what part of the game to look at such as serving count,
+    spiking accuracy, average ball speed on spikes
+- Have different diagrams available to view this data on in a dropdown list,
+    and have calculations process in different classes for each individual graph (TBD)
+
+CLASS PLAYER
+- sets properties for each player in general such as position, country, number
+- Have the player inherit basic movesets like bumping, spiking, tossing. This makes it easier 
+    for testing, debugging, and a more general character for the 1v1 mode
+
+CLASS SPIKER, MIDDLE BLOCKER, SETTER, LIBERO, etc.
+- Have the individual roles for each of the different positions and restrictions
+- Have motion be different for each of these different characters
+- Have movement restrictions for each of these different roles, like the libero not moving forward
+
