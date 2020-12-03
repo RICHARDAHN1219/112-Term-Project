@@ -146,11 +146,13 @@ class MatchOptions(App):
 class Sides(App):
     #In this code, we want the different players to select a certain side of the match,
     #so that it could be a 1 v 1 or 2 v AI
+    playersInTeam1 = []
+    playersInTeam2 = []
+    team1Text = ""
+    team2Text = ""
     def appStarted(self):
-        self.playersInTeam1 = []
-        self.playersInTeam2 = []
-        self.Player1 = "Hinata"
-        self.Player2 = "Kageyama"
+        self.Player1 = "player1"
+        self.Player2 = "player2"
         self.imageNum1 = self.loadImage("number1.png")
         self.imageNum2 = self.loadImage("number2.png")
         self.PlayerIcon1 = self.scaleImage(self.imageNum1, .07)
@@ -162,8 +164,8 @@ class Sides(App):
         self.player1Y = self.height/2 + 30
         self.player2X = self.width/2
         self.player2Y = self.height/2 + 100
-        self.Team1List = ",".join(self.playersInTeam1)
-        self.Team2List = ",".join(self.playersInTeam2)
+        self.Team1List = ",".join(Sides.playersInTeam1)
+        self.Team2List = ",".join(Sides.playersInTeam2)
         self.image1 = self.loadImage('brazilVolley.jpg')
 
     def keyPressed(self, event):
@@ -263,19 +265,19 @@ class Sides(App):
 
         
         if self.playersInTeam1 == []:
-            team1Text = "CPU"
+            Sides.team1Text = "CPU"
             #now make team1 have only AI's 
         else:
-            team1Text = ", ".join(self.playersInTeam1)
+            Sides.team1Text = ", ".join(self.playersInTeam1)
         if self.playersInTeam2 == []:
-            team2Text = "CPU"
+            Sides.team2Text = "CPU"
             #now make team2 have only AI's 
         else:
-            team2Text = ", ".join(self.playersInTeam2)
+            Sides.team2Text = ", ".join(self.playersInTeam2)
         canvas.create_text(self.width/2, self.height - 70, 
-                text = f"Team {self.Team1}: " + team1Text, font = "Arial 30 bold", fill = "#B53737")
+                text = f"Team {self.Team1}: " + Sides.team1Text, font = "Arial 30 bold", fill = "#B53737")
         canvas.create_text(self.width/2, self.height - 30, 
-                text = f"Team {self.Team2}: " + team2Text, font = "Arial 30 bold", fill = "#1338BE")
+                text = f"Team {self.Team2}: " + Sides.team2Text, font = "Arial 30 bold", fill = "#1338BE")
 
 
 class Match(App):
@@ -290,6 +292,9 @@ class Match(App):
         # This initializes most of our model (stored in app.xyz)
         # This is called when they start the app, and also after
         # the game is over when we restart the app.
+        self.notServed = True
+        self.gageValue = 0
+        self.gageSD = 0
         self.topCount = 0
         self.bottomCount = 0
         self.rowCount = 0
@@ -297,7 +302,7 @@ class Match(App):
         self.top2Count = 0
         self.bottom2Count = 0
         self.dotOutline = "green"
-        self.timerDelay = 500 # milliseconds
+        self.timerDelay = 200 # milliseconds
         self.waitingForKeyPress = True
         self.gameOver = False
         self.paused = False
@@ -305,10 +310,6 @@ class Match(App):
         Match.resetCourt(self)
         Match.resetPlayers(self)
         Match.resetBall(self)
-        self.dotDx = -5
-        self.dotDy = -3
-        self.incrementX = 60
-        self.incrementY = 3
         if MatchOptions.Difficulty == "Easy":
             self.ballSpeed = 10
         elif MatchOptions.Difficulty == "Intermediate":
@@ -338,6 +339,8 @@ class Match(App):
         self.ballWidth = self.width/2-30
         self.ballHeight = self.height/2 + 30
         self.ballRadius = 15
+        self.dotDx = -10
+        self.dotDy = -3
     
     def resetPlayers(self):
         #### 1 Player #####
@@ -398,7 +401,7 @@ class Match(App):
         canvas.create_oval(cx-r, cy-r, cx+r, cy+r, fill = "pink")'''
     def timerFired(self):
         # This is a Controller
-        if (not self.paused):
+        if (not self.paused and not self.notServed):
             Match.doStep(self)
 
     def doStep(self):
@@ -640,7 +643,10 @@ class Match(App):
                         self.player2HeightBR -= 15
         elif event.key == "p":
             #have spike function run
-            pass
+            if self.paused == False:
+                self.paused = True
+            else:
+                self.paused = False
         elif event.key == "r":
             self.gameReset = True
         elif event.key == "0":
@@ -652,48 +658,13 @@ class Match(App):
         pass'''
 
     def mousePressed(self, event):
-        print(event.x, event.y)
-
-    def moveBall1(self):       
-        self.ballWidth += self.dotDx
-        self.ballHeight += self.dotDy
-        if Match.ballIntersects(self):
-            if (self.dot1Width <= self.ballWidth <= self.dot1Width + 40 
-            or self.dot1Height-40 <= self.ballHeight <= self.dot1Height):
-                self.ballWidth += self.incrementX
-                self.dotDx = 10
-                self.dotDy = random.choice([-self.dotDy, self.dotDy])
-                self.ballHeight += random.choice([-self.incrementY, self.incrementY])
-            elif (self.dot2Width <= self.ballWidth <= self.dot2Width + 40 
-            or self.dot2Height >= self.ballHeight >= self.dot2Height - 40):
-                self.ballWidth -= self.incrementX
-                self.dotDx = -10
-                self.dotDy = random.choice([-self.dotDy, self.dotDy]) 
-                self.ballHeight += random.choice([-self.incrementY, self.incrementY])
-        if (self.ballHeight + self.ballRadius >= self.height): #self.height
-            # The dot went off the bottom!
-            self.ballHeight = self.height - self.ballRadius
-            self.dotDy = -self.dotDy
-        elif (self.ballHeight - self.ballRadius <= 0): #0
-            # The dot went off the top!
-            self.ballHeight = self.ballRadius
-            self.dotDy = -self.dotDy
-        if (self.ballWidth + self.ballRadius >= self.width): #self.width
-            # The dot went off the right!
-            self.ballWidth = self.width - self.ballRadius
-            self.dotDx = -self.dotDx
-        elif (self.ballWidth - self.ballRadius <= 0): #0
-            # The dot went off the top!
-            self.ballWidth = self.ballRadius
-            self.dotDx = -self.dotDx
-            #self.score += 1 # hurray!
-            #self.dotDx = -self.dotDx
-            #dToMiddleY = self.ballHeight - (self.dot1Height * 2 - 40)/2
-            #dampeningFactor = 3 # smaller = more extreme bounces
-            #self.dotDy = dToMiddleY / dampeningFactor
-            '''if self.speedMode:
-                self.dotDx *= 1.5
-                self.dotDy *= 1.5'''
+        if event.x >= self.width/2 - 90 and event.x <= self.width/2 + 90:
+            if event.y >= self.height/2 - 160 and event.y <= self.height/2 - 100:
+                Match.resetApp(self)
+            if event.y >= self.height/2 - 60 and event.y <= self.height/2:
+                MatchOptions(width=1920, height=1080)
+            if event.y >= self.height/2 + 40 and event.y <= self.height/2 + 100:
+                HomeScreen(width=1920, height=1080)
 
     def moveBall(self):    
         self.ballWidth += self.dotDx
@@ -714,34 +685,31 @@ class Match(App):
             # The dot went off the top!
             self.ballWidth = self.ballRadius
             self.dotDx = -self.dotDx
-        elif Match.ballIntersects(self):
+        elif Match.ballIntersectsTeam1(self):
             if (self.dot1Width <= self.ballWidth <= self.dot1Width + 40 
             or self.dot1Height-40 <= self.ballHeight <= self.dot1Height):
-                #self.ballWidth += self.incrementX
-                self.dotDx = 10
-                #self.dotDy = random.choice([-self.dotDy, self.dotDy])
-                #self.ballHeight += random.choice([-self.incrementY, self.incrementY])
-            elif (self.dot2Width <= self.ballWidth <= self.dot2Width + 40 
+                self.dotDx = -self.dotDx
+                self.ballWidth = self.dot1Width + 40 + self.ballRadius
+                dToMiddleY = self.ballHeight - (self.dot1Height-40 + self.dot1Height)/2
+                dampeningFactor = 3 # smaller = more extreme bounces
+                self.dotDy = dToMiddleY / dampeningFactor
+        elif Match.ballIntersectsTeam2(self):
+            if (self.dot2Width <= self.ballWidth <= self.dot2Width + 40 
             or self.dot2Height >= self.ballHeight >= self.dot2Height - 40):
-                #self.ballWidth -= self.incrementX
-                self.dotDx = -10
-               #self.dotDy = random.choice([-self.dotDy, self.dotDy]) 
-                #self.ballHeight += random.choice([-self.incrementY, self.incrementY])
-            # The dot hit the paddle!
-            #self.score += 1 # hurray!
-            self.dotDx = -self.dotDx
-            self.ballWidth = self.ballWidth + self.ballRadius
-            dToMiddleY = self.ballHeight - (self.ballHeight - self.ballRadius + self.ballHeight + self.ballRadius)/2
-            dampeningFactor = 3 # smaller = more extreme bounces
-            self.dotDy = dToMiddleY / dampeningFactor
+                self.dotDx = -self.dotDx
+                self.ballWidth = self.dot2Width - self.ballRadius
+                dToMiddleY = self.ballHeight - (self.dot2Height-40 + self.dot2Height)/2
+                dampeningFactor = 3 # smaller = more extreme bounces
+                self.dotDy = dToMiddleY / dampeningFactor
 
-
-    def ballIntersects(self):
+    def ballIntersectsTeam1(self):
         return (self.dot1Width < self.ballWidth < self.dot1Width + 40 
-        or self.dot1Height - 40 < self.ballHeight < self.dot1Height or
-        self.dot2Width < self.ballWidth < self.dot2Width + 40  
-        or self.dot2Height-40 < self.ballHeight < self.dot2Height)
+        or self.dot1Height - 40 < self.ballHeight < self.dot1Height)
     
+    def ballIntersectsTeam2(self):
+        return (self.dot2Width < self.ballWidth < self.dot2Width + 40  
+        or self.dot2Height-40 < self.ballHeight < self.dot2Height)
+
     def drawCourt(self, canvas):
         canvas.create_rectangle(0,0,self.width,self.height,fill = "#ffeeda")
         canvas.create_image(self.width/2, self.height/2 + 30, image = ImageTk.PhotoImage(self.courtimage))
@@ -767,7 +735,7 @@ class Match(App):
 
     def drawTeam2(self, canvas):
         if MatchOptions.PlayerCount == 1:
-                    canvas.create_oval(self.dot2Width, self.dot2Height, self.dot2Width + 40, self.dot2Height - 40, fill = "blue")
+            canvas.create_oval(self.dot2Width, self.dot2Height, self.dot2Width + 40, self.dot2Height - 40, fill = "blue")
         elif MatchOptions.PlayerCount == 2:
             canvas.create_oval(self.dot2WidthFront, self.dot2HeightFront, self.dot2WidthFront + 40, self.dot2HeightFront - 40, fill = "blue")
             canvas.create_oval(self.dot2WidthBack, self.dot2HeightBack, self.dot2WidthBack - 40, self.dot2HeightBack - 40, fill = "blue")
@@ -784,7 +752,64 @@ class Match(App):
             self.ballHeight-self.ballRadius, self.ballWidth+self.ballRadius, 
             self.ballHeight+self.ballRadius, fill = "pink")'''
         canvas.create_image(self.ballWidth, self.ballHeight, 
-           image=ImageTk.PhotoImage(self.volleyballImage))
+            image=ImageTk.PhotoImage(self.volleyballImage))
+    
+    def drawPaused(self, canvas):
+        canvas.create_rectangle(self.width/2 - 120, self.height/2 - 200, 
+                            self.width/2 + 120, self.height/2 + 200, fill = "#ffeeda")
+        #Restart Button
+        canvas.create_rectangle(self.width/2 - 90, self.height/2 - 160, 
+                                self.width/2 + 90, self.height/2 - 100, fill = "#f49030")
+        canvas.create_text(self.width/2, self.height/2 - 130,
+                        text='Restart',
+                        font='Arial 18 bold')
+        #Team Select Button
+        canvas.create_rectangle(self.width/2 - 90, self.height/2 - 60,
+                                self.width/2 + 90, self.height/2, fill = "#f49030")
+        canvas.create_text(self.width/2, self.height/2 - 30,
+                        text='Match Options',
+                        font='Arial 18 bold')
+        #Home Button
+        canvas.create_rectangle(self.width/2 - 90, self.height/2 + 40,
+                                self.width/2 + 90, self.height/2 + 100, fill = "#f49030")
+        canvas.create_text(self.width/2, self.height/2 + 70,
+                            text = "Home",
+                            font = "Arial 18 bold")                           
+
+
+
+
+
+
+    def scoreCalculator(self):
+        #if a ball reaches a dotDx or dotDy of 0 in a gap for a certain duration, say t=4
+            #if ball.width is between the width of the edge of the left side of court and the net
+                #add point to score 2
+            #if ball.width is between the width of the edge of the right side of court and the net
+                #add point to score 1
+        pass
+
+    def hitGageCalculator(self):
+        if -.5 < self.gageSD < .5:
+            self.ballSpeed *= ((100 - random.randint(0, 19.1))/100)
+        elif -1 < self.gageSD < -.5 or .5 < self.gageSD < 1:
+            self.ballSpeed *= ((100 - random.randint(19.1, 34))/100)
+        elif -1.5 < self.gageSD < -1 or 1 < self.gageSD < 1.5:
+            self.ballSpeed *= ((100 - random.randint(19.1, 34))/100)
+        pass
+
+    def drawHitGage(self):
+        #draw different rectangular regions, and have a dot travel up and down the bounds of the hit gage
+        #if hit gage lands in a certain color region, pull a random speed percentage from a range of numbers
+            #i.e. if in green, randomly select from 85 - 95
+        #have each color region be a rectangle inside the hit gage so that you can use conditional depending on which region the dot coordinates land in
+
+        #have this appear when player is about to spike, serve
+        pass
+
+
+
+
 
     def redrawAll(self, canvas):
         Match.drawCourt(self, canvas)
@@ -798,6 +823,8 @@ class Match(App):
         Match.drawVolleyBall(self, canvas)
         Match.drawTeam1(self, canvas)
         Match.drawTeam2(self, canvas)
+        if self.paused == True:
+            Match.drawPaused(self, canvas)
 
 class MatchIsOver(App):
     def appStarted(self):
