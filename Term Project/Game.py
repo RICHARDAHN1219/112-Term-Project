@@ -3,11 +3,15 @@ from PIL import *
 import string, math, random
 #from pygame import mixer
 from tkinter import *
+import pygame
 
 
 class HomeScreen(App):
     def appStarted(self):
-        self.image1 = self.loadImage('background1.jpg') #Background image for the screen, a person's hand on the volleyball
+        self.image1 = self.loadImage('background1.jpg')
+        #Background image for the screen, a person's hand on the volleyball
+        #Taken from a wallpaper website
+        #t.ly/QjRE is the link
         self.image2 = self.scaleImage(self.image1, 5)
 
     def keyPressed(self, event):
@@ -48,6 +52,8 @@ class MatchOptions(App):
         self.boxFillSelected = "#008080"
         self.boxFillStandard = "#f49030"
         self.image1 = self.loadImage('haikyuubackground2.jpg') #A background of characters playing volleyball
+        #Taken from Pinterest
+        #Link: t.ly/L3jS
         #Have button change color later
 
     Teamlist = [
@@ -145,7 +151,6 @@ class MatchOptions(App):
         MatchOptions.drawDifficulty(self, canvas)
         MatchOptions.drawContinueButton(self, canvas)
     
-
 class Sides(App):
     #In this code, we want the different players to select a certain side of the match,
     #so that it could be a 1 v 1 or 2 v AI
@@ -156,8 +161,12 @@ class Sides(App):
     def appStarted(self):
         self.Player1 = "player1"
         self.Player2 = "player2"
-        self.imageNum1 = self.loadImage("number1.png") #The player1 icon
-        self.imageNum2 = self.loadImage("number2.png") #The player 2 icon
+        self.imageNum1 = self.loadImage("number1.png")
+        #The player1 icon taken from a png image site
+        #t.ly/AqHF
+        self.imageNum2 = self.loadImage("number2.png") 
+        #The player 2 icon take from a png image site
+        #t.ly/Gr5S
         self.PlayerIcon1 = self.scaleImage(self.imageNum1, .07)
         self.PlayerIcon2 = self.scaleImage(self.imageNum2, .07)
         self.Teamlist = MatchOptions.Teamlist
@@ -169,7 +178,10 @@ class Sides(App):
         self.player2Y = self.height/2 + 100
         self.Team1List = ",".join(Sides.playersInTeam1)
         self.Team2List = ",".join(Sides.playersInTeam2)
-        self.image1 = self.loadImage('brazilVolley.jpg') #The background screen of a Brazilian volleyball player
+        self.image1 = self.loadImage('brazilVolley.jpg') 
+        #The background screen of a Brazilian volleyball player
+        #Taken from a wallpaper website
+        #t.ly/nQ4U
 
     def keyPressed(self, event):
         if event.key == 'a':
@@ -286,10 +298,12 @@ class Sides(App):
 class Match(App):
     score1 = 0
     score2 = 0
+    
     def appStarted(self):
         self.gameReset = False
         Match.resetApp(self)
         self.gageActivates = False
+        
     
     def resetApp(self):
         # This is a helper function for Controllers
@@ -298,6 +312,7 @@ class Match(App):
         # the game is over when we restart the app.
         self.notServed = True
         self.rallyStarts = False
+        self.jumpIsPressed = False
         self.gageValue = 0
         self.gageSD = 0
         self.serveOption = 0
@@ -319,23 +334,21 @@ class Match(App):
         self.serveGoesOverNet = False
         self.gapsTeam1 = []
         self.gapsTeam2 = []
+        self.fillTeam1 = "red"
+        self.fillTeam2 = "blue"
         Match.resetTeams(self)
         Match.resetCourt(self)
         Match.resetPlayer1(self)
         Match.resetPlayer2(self)
         Match.resetBall(self)
-        if MatchOptions.Difficulty == "Easy":
-            self.ballSpeed = 10
-        elif MatchOptions.Difficulty == "Intermediate":
-            self.ballSpeed = 15
-        else:
-            self.ballSpeed = 30
         Match.resetGage(self)
 
     
     def resetTeams(self):
-        self.imageNum1 = self.loadImage("number1.png") #Player 1 icon
-        self.imageNum2 = self.loadImage("number2.png") #Player 2 Icon
+        self.imageNum1 = self.loadImage("number1.png") 
+        #Same player1 icon
+        self.imageNum2 = self.loadImage("number2.png")
+        #Same player 2 Icon
         self.PlayerIcon1 = self.scaleImage(self.imageNum1, 2/3)
         self.PlayerIcon2 = self.scaleImage(self.imageNum2, 2/3)
         self.Team1 = MatchOptions.Team1
@@ -343,8 +356,11 @@ class Match(App):
 
     def resetCourt(self):
         self.imageCourt = self.loadImage("court2dtransparent.png") #picture of the court
+        #Took original image from t.ly/eQY0, made it transparent myself
         self.courtimage = self.scaleImage(self.imageCourt, 2.2)
         self.ballimage = self.loadImage("volleyballimage.png") #picture of volleyball
+        #Found image of mikasa v200w volleyball and made it transparent
+        #t.ly/BfeN
         self.volleyballImage = self.scaleImage(self.ballimage, .04)
         self.courtNetX = self.width/2
         self.courtNetBottom = self.height - 750
@@ -369,6 +385,24 @@ class Match(App):
         self.originalDy = -3
         self.dotGageDx = -5 #Switch speed of this for different difficulties
         self.dotGageDy = -5
+        if MatchOptions.Difficulty == "Easy":
+            self.ballSpeed = 15
+            self.ballAngle = 40
+        elif MatchOptions.Difficulty == "Hard":
+            self.ballSpeed = 25
+            self.ballAngle = 60
+        else:
+            self.ballSpeed = 20
+            self.ballAngle = 50
+        self.ballVx = self.ballSpeed*math.cos(math.radians(self.ballAngle))
+        self.ballVy = self.ballSpeed*math.sin(math.radians(self.ballAngle))
+        self.ballAx   = 0
+        self.ballAy   = -9.8 #Gravity
+        self.ballTime = 0
+        self.ballDt = .05
+        self.ballX = self.ballWidth
+        self.ballY = self.ballHeight
+        
     
     def resetPlayer1(self):
         #### 1 Player #####
@@ -393,8 +427,33 @@ class Match(App):
             self.dot1HeightFront = self.height/2 + 50
             self.dot1WidthBack = self.bottomLineL-90
             self.dot1HeightBack =  self.bottomLineY - 50
+
+        self.fillTeam1Front = self.fillTeam1
+        self.fillTeam1Back = self.fillTeam1
+        if MatchOptions.PlayerCount == 2:
+            if Sides.playersInTeam1 != []: 
+                if self.topCount % 2 == 1:
+                    self.fillTeam1Front = "pink"
+                    self.fillTeam1Back = "red"
+                elif self.topCount % 2 == 0:
+                    self.fillTeam1Back = "pink"
+                    self.fillTeam1Front = "Red"
+
         
         #### 6 Players ####
+        self.fillTeam1TM = "red"
+        self.fillTeam1TL = "red"
+        self.fillTeam1TR = "red"
+        self.fillTeam1BM = "red"
+        self.fillTeam1BL = "red"
+        self.fillTeam1BR = "red"
+        self.fillTeam2TM = "blue"
+        self.fillTeam2TL = "blue"
+        self.fillTeam2TR = "blue"
+        self.fillTeam2BM = "blue"
+        self.fillTeam2BL = "blue"
+        self.fillTeam2BR = "blue"
+
         if self.servingSide != 1:
             self.player1WidthTM = self.width/2-90
             self.player1HeightTM = self.height/2 + 50
@@ -423,7 +482,7 @@ class Match(App):
             self.player1HeightBL = self.height/2 - 70
             self.player1WidthBR = self.bottomLineL-90
             self.player1HeightBR = self.bottomLineY - 50
-
+           
     def resetPlayer2(self):
         #### 1 Player #####
         if self.servingSide != 1:
@@ -444,6 +503,18 @@ class Match(App):
             self.dot2HeightFront = self.height/2 + 50
             self.dot2WidthBack = self.width/2+300
             self.dot2HeightBack = self.height/2 + 50
+
+
+        self.fillTeam2Front = self.fillTeam2
+        self.fillTeam2Back = self.fillTeam2
+        if MatchOptions.PlayerCount == 2:
+            if Sides.playersInTeam2 != []:
+                if self.top2Count % 2 == 1:
+                    self.fillTeam2Front = "purple"
+                    self.fillTeam2Back = "blue"
+                else:
+                    self.fillTeam2Back = "purple"
+                    self.fillTeam2Front = "blue"
 
 
         #### 6 Players ####
@@ -504,7 +575,7 @@ class Match(App):
         if self.notServed == False:
             Match.doGage(self)
         elif self.rallyStarts == True and not self.gameOver:
-            Match.moveBall(self)
+            Match.moveBall1(self)
             Match.doMoveP2AI(self)
             Match.doMoveP1AI(self)
     def doGage(self):
@@ -785,6 +856,126 @@ class Match(App):
             Match.toss(self)
         elif event.key == "5":
             Match.spike(self)
+        elif event.key == "i":
+            self.jumpIsPressed = True
+        if self.jumpIsPressed == True:
+            if event.key == "1":
+                Match.toss(self)
+            elif event.key == "2":
+                Match.spike(self)
+        if MatchOptions.PlayerCount == 2:
+            if Sides.playersInTeam1 != []: 
+                if self.topCount % 2 == 1:
+                    self.fillTeam1Front = "purple"
+                    self.fillTeam1Back = "red"
+                elif self.topCount % 2 == 0:
+                    self.fillTeam1Back = "purple"
+                    self.fillTeam1Front = "Red"
+            if Sides.playersInTeam1 != []:
+                if self.top2Count % 2 == 1:
+                    self.fillTeam2Front = "purple"
+                    self.fillTeam2Back = "blue"
+                else:
+                    self.fillTeam2Back = "purple"
+                    self.fillTeam2Front = "blue"
+            if Sides.playersInTeam2 != []:
+                if self.top2Count % 2 == 1:
+                    self.fillTeam2Front = "purple"
+                    self.fillTeam2Back = "blue"
+                else:
+                    self.fillTeam2Back = "purple"
+                    self.fillTeam2Front = "blue"
+        elif MatchOptions.PlayerCount == 6:
+            if Sides.playersInTeam1 != []: 
+                if self.rowCount % 2 == 1:
+                    if self.topCount % 3 == 0:
+                        self.fillTeam1TM = "red"
+                        self.fillTeam1TL = "purple"
+                        self.fillTeam1TR = "red"
+                        self.fillTeam1BM = "red"
+                        self.fillTeam1BL = "red"
+                        self.fillTeam1BR = "red"
+                    elif self.topCount % 3 == 1:
+                        self.fillTeam1TM = "purple"
+                        self.fillTeam1TL = "red"
+                        self.fillTeam1TR = "red"
+                        self.fillTeam1BM = "red"
+                        self.fillTeam1BL = "red"
+                        self.fillTeam1BR = "red"
+                    elif self.topCount % 3 == 2:
+                        self.fillTeam1TM = "red"
+                        self.fillTeam1TL = "red"
+                        self.fillTeam1TR = "purple"
+                        self.fillTeam1BM = "red"
+                        self.fillTeam1BL = "red"
+                        self.fillTeam1BR = "red"
+                else:
+                    if self.bottomCount % 3 == 0:
+                        self.fillTeam1TM = "red"
+                        self.fillTeam1TL = "red"
+                        self.fillTeam1TR = "red"
+                        self.fillTeam1BM = "red"
+                        self.fillTeam1BL = "purple"
+                        self.fillTeam1BR = "red"
+                    elif self.bottomCount % 3 == 1:
+                        self.fillTeam1TM = "red"
+                        self.fillTeam1TL = "red"
+                        self.fillTeam1TR = "red"
+                        self.fillTeam1BM = "purple"
+                        self.fillTeam1BL = "red"
+                        self.fillTeam1BR = "red"
+                    elif self.bottomCount % 3 == 2:
+                        self.fillTeam1TM = "red"
+                        self.fillTeam1TL = "red"
+                        self.fillTeam1TR = "red"
+                        self.fillTeam1BM = "red"
+                        self.fillTeam1BL = "red"
+                        self.fillTeam1BR = "purple"
+            if Sides.playersInTeam2 != []: 
+                if self.row2Count % 2 == 1:
+                    if self.top2Count % 3 == 0:
+                        self.fillTeam2TM = "blue"
+                        self.fillTeam2TL = "purple"
+                        self.fillTeam2TR = "blue"
+                        self.fillTeam2BM = "blue"
+                        self.fillTeam2BL = "blue"
+                        self.fillTeam2BR = "blue"
+                    elif self.top2Count % 3 == 1:
+                        self.fillTeam2TM = "purple"
+                        self.fillTeam2TL = "blue"
+                        self.fillTeam2TR = "blue"
+                        self.fillTeam2BM = "blue"
+                        self.fillTeam2BL = "blue"
+                        self.fillTeam2BR = "blue"
+                    elif self.top2Count % 3 == 2:
+                        self.fillTeam2TM = "blue"
+                        self.fillTeam2TL = "blue"
+                        self.fillTeam2TR = "purple"
+                        self.fillTeam2BM = "blue"
+                        self.fillTeam2BL = "blue"
+                        self.fillTeam2BR = "blue"
+                else:
+                    if self.bottom2Count % 3 == 0:
+                        self.fillTeam2TM = "blue"
+                        self.fillTeam2TL = "blue"
+                        self.fillTeam2TR = "blue"
+                        self.fillTeam2BM = "blue"
+                        self.fillTeam2BL = "purple"
+                        self.fillTeam2BR = "blue"
+                    elif self.bottom2Count % 3 == 1:
+                        self.fillTeam2TM = "blue"
+                        self.fillTeam2TL = "blue"
+                        self.fillTeam2TR = "blue"
+                        self.fillTeam2BM = "purple"
+                        self.fillTeam2BL = "blue"
+                        self.fillTeam2BR = "blue"
+                    elif self.bottom2Count % 3 == 2:
+                        self.fillTeam2TM = "blue"
+                        self.fillTeam2TL = "blue"
+                        self.fillTeam2TR = "blue"
+                        self.fillTeam2BM = "blue"
+                        self.fillTeam2BL = "blue"
+                        self.fillTeam2BR = "purple"
     '''def mousePressed(self, event):
         #Continue button is pressed
         pass
@@ -800,7 +991,8 @@ class Match(App):
             if event.y >= self.height/2 + 40 and event.y <= self.height/2 + 100:
                 HomeScreen(width=1920, height=1080)
 
-    def moveBall(self):    
+    def moveBall(self):
+        #Edge calculation similar to pong    
         self.ballWidth += self.dotDx
         self.ballHeight += self.dotDy 
         if (self.ballHeight + self.ballRadius >= self.height): #self.height
@@ -906,25 +1098,6 @@ class Match(App):
                         self.dotDx *= 1.5
                         self.dotDy *= 1.5    
 
-            if self.ballWidth > self.width/2:
-                self.team1TouchCount = 0
-            if self.courtNetBottom <=  self.ballHeight <= self.courtNetTop:
-                if ((self.ballWidth + self.ballRadius >= self.width) or 
-                    (self.team2TouchCount > 3)):
-                    Match.score1 += 1
-                    self.gameReset = True
-                    self.servingSide = 0
-                else:
-                    if self.team1TouchCount == 0:
-                        Match.score1 += 1
-                        self.servingSide = 0
-                    if ((self.team1TouchCount > 0 
-                    and self.ballHeight + self.ballRadius >= self.height) or
-                    (self.ballHeight - self.ballRadius <= 0 and self.team1TouchCount > 0 )):
-                        Match.score2 += 1
-                        self.servingSide = 1
-                    self.gameReset = True
-
 
         elif Match.ballIntersectsTeam2(self):
             if MatchOptions.PlayerCount == 1:
@@ -1011,19 +1184,51 @@ class Match(App):
                     else:
                         self.dotDx *= 1.5
                         self.dotDy *= 1.5   
+        
+    def moveBall1(self):
+        #Edge calculation similar to pong    
+        #self.ballWidth += self.dotDx
+        #self.ballHeight += self.dotDy 
+        self.ballWidth += Match.VxCalculator(self, self.ballDt)
+        self.ballHeight -= Match.VyCalculator(self, self.ballDt)
+        if Match.ballIntersectsTeam1(self):
+            self.time = 0
+            if MatchOptions.PlayerCount == 1:
+                self.ballVx = -self.ballVx
 
-            if self.ballWidth < self.width/2:
-                self.team2TouchCount = 0
-            if self.ballWidth < self.width/2:
-                if ((self.ballWidth - self.ballRadius <= 0) or
-                    (self.ballHeight + self.ballRadius >= self.height) or 
-                    (self.ballWidth - self.ballRadius <= 0) or 
-                    (self.team1TouchCount > 3)):
-                    Match.score2 += 1
-                    self.gameReset = True
-                    self.servingSide = 1
+            elif MatchOptions.PlayerCount == 2:
+                if (self.dot1WidthFront < self.ballWidth < self.dot1WidthFront + 40  
+                        and self.dot1HeightFront-40 < self.ballHeight < self.dot1HeightFront):
+                    self.team1TouchCount += 1
+                    self.touchCount += 1
+                    if self.team1TouchCount == 2:
+                        Match.toss(self)
+                        self.ballVx = self.ballVx/2
+                        self.ballVy = 0
+                    elif self.team1TouchCount == 3:
+                        Match.spike(self)
+                        self.ballVx *= 3
+                        self.ballVy = self.ballSpeed*math.sin(math.radians(self.ballAngle*1.1))
+                elif (self.dot1WidthBack < self.ballWidth < self.dot1WidthBack + 40  
+                        and self.dot1HeightBack-40 < self.ballHeight < self.dot1HeightBack):
+                    self.team1TouchCount += 1
+                    self.touchCount += 1
+                    if self.team1TouchCount == 2:
+                        Match.toss(self)
+                        self.ballVx = self.Vx/2
+                        self.ballVy = 2
+                    elif self.team1TouchCount == 3:
+                        Match.spike(self)
+                        self.ballVx *= 1.5
+                        self.ballVy = self.ballSpeed*sin(radians(self.ballAngle*.8))
+                    '''self.dotDx = -self.originalDx * .15
+                    self.ballWidth = self.dot1WidthBack + 40 + self.ballRadius
+                    dToMiddleY = self.ballHeight - (self.dot1HeightBack-40 + self.dot1HeightBack)/2
+                    dampeningFactor = 3 # smaller = more extreme bounces
+                    self.dotDy = dToMiddleY / dampeningFactor
+                    self.touchCount += 1
+                    self.team1TouchCount += 1'''
 
- 
 
     def ballIntersectsTeam1(self):
         if MatchOptions.PlayerCount == 1:
@@ -1123,6 +1328,15 @@ class Match(App):
                 self.dotDx *= 1.1
                 self.dotDy *= 1.1
 
+    def jump(self):
+        if self.jumpIsPressed == True:
+            self.ballHeight += 15
+            self.gageActivates = not self.gageActivates
+            self.notServed = not self.notServed
+            self.gagePressCount += 1
+            if self.gagePressCount % 2==0 and self.gagePressCount > 0:
+                Match.resetGage(self)
+            self.ballHeight -= 15
 
     def movePlayer1AI(self):
             if MatchOptions.PlayerCount == 1:
@@ -1380,7 +1594,6 @@ class Match(App):
                         self.player1HeightBM += 3
                 if self.ballWidth > self.width/2:
                     Match.resetPlayer1(self)
-
 
     def movePlayer2AI(self):
         if MatchOptions.PlayerCount == 1:
@@ -1642,6 +1855,7 @@ class Match(App):
 
     def distance(x0,y0,x1,y1):
         return math.sqrt(((x0-x1)**2)+((y0-y1)**2) )
+
 #######Volleyball Moves ##########
     def topSpinServe(self, event):
         self.gageActivates = not self.gageActivates
@@ -1661,6 +1875,7 @@ class Match(App):
         self.rallyStarts = True
         self.dotDx = -self.dotDx
         self.dotDy = random.randint(-3, -1)
+
     def toss(self):
         if self.touchCount < 2:
             self.touchCount += 1
@@ -1689,11 +1904,10 @@ class Match(App):
                 self.ballHeight = self.dot1HeightFront
             self.dotDx *= .1
             self.dotDy *= .1
+
     def spike(self):
-        if self.touchCount < 3:
-            self.touchCount += 1
-            
-            if MatchOptions.PlayerCount == 2:
+        self.touchCount += 1          
+        if MatchOptions.PlayerCount == 2:
                 if self.ballWidth > self.width/2:
                     distance = int(Match.distance(self.dot1WidthFront, self.dot1HeightFront,
                                             self.dot1WidthBack, self.dot1HeightBack))
@@ -1750,31 +1964,31 @@ class Match(App):
 
     def drawTeam1(self, canvas):
         if MatchOptions.PlayerCount == 1:
-            canvas.create_oval(self.dot1Width, self.dot1Height, self.dot1Width + 40, self.dot1Height - 40, fill = "red")
+            canvas.create_oval(self.dot1Width, self.dot1Height, self.dot1Width + 40, self.dot1Height - 40, fill = f"{self.fillTeam1}")
         elif MatchOptions.PlayerCount == 2:
-            canvas.create_oval(self.dot1WidthFront, self.dot1HeightFront, self.dot1WidthFront + 40, self.dot1HeightFront - 40, fill = "red")
-            canvas.create_oval(self.dot1WidthBack, self.dot1HeightBack, self.dot1WidthBack + 40, self.dot1HeightBack - 40, fill = "red")
+            canvas.create_oval(self.dot1WidthFront, self.dot1HeightFront, self.dot1WidthFront + 40, self.dot1HeightFront - 40, fill = f"{self.fillTeam1}", outline = self.fillTeam1Front, width = 3)
+            canvas.create_oval(self.dot1WidthBack, self.dot1HeightBack, self.dot1WidthBack + 40, self.dot1HeightBack - 40, fill = f"{self.fillTeam1}", outline = self.fillTeam1Back, width = 3)
         elif MatchOptions.PlayerCount == 6:
-            canvas.create_oval(self.player1WidthTM, self.player1HeightTM, self.player1WidthTM + 40, self.player1HeightTM - 40, fill = "red") #Top Middle
-            canvas.create_oval(self.player1WidthBM, self.player1HeightBM, self.player1WidthBM + 40, self.player1HeightBM - 40, fill = "red") #Back Middle
-            canvas.create_oval(self.player1WidthBL, self.player1HeightBL, self.player1WidthBL + 40, self.player1HeightBL - 40, fill = "red") #Back left in court
-            canvas.create_oval(self.player1WidthTL, self.player1HeightTL, self.player1WidthTL + 40, self.player1HeightTL - 40, fill = "red") #Top Left
-            canvas.create_oval(self.player1WidthTR, self.player1HeightTR, self.player1WidthTR + 40, self.player1HeightTR - 40, fill = "red") #Top Right
-            canvas.create_oval(self.player1WidthBR, self.player1HeightBR, self.player1WidthBR + 40, self.player1HeightBR - 40, fill = "red") #Bottom Right
+            canvas.create_oval(self.player1WidthTM, self.player1HeightTM, self.player1WidthTM + 40, self.player1HeightTM - 40, fill = f"{self.fillTeam1}", outline = self.fillTeam1TM, width = 3) #Top Middle
+            canvas.create_oval(self.player1WidthBM, self.player1HeightBM, self.player1WidthBM + 40, self.player1HeightBM - 40, fill = f"{self.fillTeam1}", outline = self.fillTeam1BM, width = 3) #Back Middle
+            canvas.create_oval(self.player1WidthBL, self.player1HeightBL, self.player1WidthBL + 40, self.player1HeightBL - 40, fill = f"{self.fillTeam1}", outline = self.fillTeam1BL, width = 3) #Back left in court
+            canvas.create_oval(self.player1WidthTL, self.player1HeightTL, self.player1WidthTL + 40, self.player1HeightTL - 40, fill = f"{self.fillTeam1}", outline = self.fillTeam1TL, width = 3) #Top Left
+            canvas.create_oval(self.player1WidthTR, self.player1HeightTR, self.player1WidthTR + 40, self.player1HeightTR - 40, fill = f"{self.fillTeam1}", outline = self.fillTeam1TR, width = 3) #Top Right
+            canvas.create_oval(self.player1WidthBR, self.player1HeightBR, self.player1WidthBR + 40, self.player1HeightBR - 40, fill = f"{self.fillTeam1}", outline = self.fillTeam1BR, width = 3) #Bottom Right
 
     def drawTeam2(self, canvas):
         if MatchOptions.PlayerCount == 1:
-            canvas.create_oval(self.dot2Width, self.dot2Height, self.dot2Width + 40, self.dot2Height - 40, fill = "blue")
+            canvas.create_oval(self.dot2Width, self.dot2Height, self.dot2Width + 40, self.dot2Height - 40, fill = f"{self.fillTeam2}")
         elif MatchOptions.PlayerCount == 2:
-            canvas.create_oval(self.dot2WidthFront, self.dot2HeightFront, self.dot2WidthFront + 40, self.dot2HeightFront - 40, fill = "blue")
-            canvas.create_oval(self.dot2WidthBack, self.dot2HeightBack, self.dot2WidthBack + 40, self.dot2HeightBack - 40, fill = "blue")
+            canvas.create_oval(self.dot2WidthFront, self.dot2HeightFront, self.dot2WidthFront + 40, self.dot2HeightFront - 40, fill = f"{self.fillTeam2}", outline = self.fillTeam2Front, width = 3)
+            canvas.create_oval(self.dot2WidthBack, self.dot2HeightBack, self.dot2WidthBack + 40, self.dot2HeightBack - 40, fill = f"{self.fillTeam2}", outline = self.fillTeam2Back, width = 3)
         elif MatchOptions.PlayerCount == 6:
-            canvas.create_oval(self.player2WidthTM, self.player2HeightTM, self.player2WidthTM + 40, self.player2HeightTM - 40, fill = "blue") #Top Middle
-            canvas.create_oval(self.player2WidthBM, self.player2HeightBM, self.player2WidthBM + 40, self.player2HeightBM - 40, fill = "blue") #Back Middle
-            canvas.create_oval(self.player2WidthBL, self.player2HeightBL, self.player2WidthBL + 40, self.player2HeightBL - 40, fill = "blue") #Back left in court
-            canvas.create_oval(self.player2WidthTL, self.player2HeightTL, self.player2WidthTL + 40, self.player2HeightTL - 40, fill = "blue") #Top Left
-            canvas.create_oval(self.player2WidthTR, self.player2HeightTR, self.player2WidthTR + 40, self.player2HeightTR + 40, fill = "blue") #Top Right
-            canvas.create_oval(self.player2WidthBR, self.player2HeightBR, self.player2WidthBR + 40, self.player2HeightBR + 40, fill = "blue") #Bottom Right
+            canvas.create_oval(self.player2WidthTM, self.player2HeightTM, self.player2WidthTM + 40, self.player2HeightTM - 40, fill = f"{self.fillTeam2}", outline = self.fillTeam2TM, width = 3) #Top Middle
+            canvas.create_oval(self.player2WidthBM, self.player2HeightBM, self.player2WidthBM + 40, self.player2HeightBM - 40, fill = f"{self.fillTeam2}", outline = self.fillTeam2BM, width = 3) #Back Middle
+            canvas.create_oval(self.player2WidthBL, self.player2HeightBL, self.player2WidthBL + 40, self.player2HeightBL - 40, fill = f"{self.fillTeam2}", outline = self.fillTeam2BL, width = 3) #Back left in court
+            canvas.create_oval(self.player2WidthTL, self.player2HeightTL, self.player2WidthTL + 40, self.player2HeightTL - 40, fill = f"{self.fillTeam2}", outline = self.fillTeam2TL, width = 3) #Top Left
+            canvas.create_oval(self.player2WidthTR, self.player2HeightTR, self.player2WidthTR + 40, self.player2HeightTR + 40, fill = f"{self.fillTeam2}", outline = self.fillTeam2TR, width = 3) #Top Right
+            canvas.create_oval(self.player2WidthBR, self.player2HeightBR, self.player2WidthBR + 40, self.player2HeightBR + 40, fill = f"{self.fillTeam2}", outline = self.fillTeam2BR, width = 3) #Bottom Right
 
     def drawVolleyBall(self, canvas):
         '''canvas.create_oval(self.ballWidth-self.ballRadius, 
@@ -1805,28 +2019,88 @@ class Match(App):
                             text = "Home",
                             font = "Arial 18 bold")                           
 
-    def scoreCalculator(self):
-        #if a ball reaches a dotDx or dotDy of 0 in a gap for a certain duration, say t=4
-            #if ball.width is between the width of the edge of the left side of court and the net
-                #add point to score 2
-            #if ball.width is between the width of the edge of the right side of court and the net
-                #add point to score 1
-        pass
 
-    def hitGageCalculator(self):
-        if -.5 < self.gageSD < .5:
-            self.ballSpeed *= ((100 - random.randint(0, 19.1))/100)
-        elif -1 < self.gageSD < -.5 or .5 < self.gageSD < 1:
-            self.ballSpeed *= ((100 - random.randint(19.1, 34))/100)
-        elif -1.5 < self.gageSD < -1 or 1 < self.gageSD < 1.5:
-            self.ballSpeed *= ((100 - random.randint(34, 43.2))/100)
-        elif -2 < self.gageSD < -1.5 or 1.5 < self.gageSD < 2:
-            self.ballSpeed *= ((100 - random.randint(43.2, 47.6))/100)
-        elif -2.5 < self.gageSD < -2 or 2 < self.gageSD < 2.5:
-            self.ballSpeed *= ((100 - random.randint(47.6, 49.3))/100)
-        elif -3 < self.gageSD < -2.5 or 2.5 < self.gageSD < 3:
-            self.ballSpeed *= ((100 - random.randint(49, 50))/100)
-        pass
+######## Calculators ########
+    #This physics-based calculation that I based my code off of is from a website explaining projectile motion
+    #https://www.assignmentexpert.com/blog/modeling-projectile-motion-using-python/
+    #This is being used for the ball trajectory
+    def VxCalculator(self, dt):
+        self.ballVx = self.ballVx + self.ballAx*self.ballDt 
+        return self.ballVx
+    def VyCalculator(self, dt):
+        self.ballVy = self.ballVy + self.ballAy*self.ballDt 
+        return self.ballVy
+    def ballXCalculator(self, dt):
+        self.ballX = self.ballX + 0.5*(self.ballVx + self.VxCalculator(self.ballDt))*self.ballDt 
+        return self.ballVx
+    def ballYCalculator(self, dt):
+        self.ballY = self.ballY + 0.5*(self.ballVy + self.VyCalculator(self.ballDt))*self.ballDt
+        return self.ballVy
+    def step(self, dt):
+        self.ballTime = self.ballTime + self.ballDt    
+
+    def scoreCalculator(self, event):
+        if self.ballVy == 0 and self.touchCount > 0:
+            if self.courtNetBottom <=  self.ballHeight <= self.courtNetTop:
+                if ((self.ballWidth + self.ballRadius >= self.width) or 
+                    (self.team2TouchCount > 3)):
+                    Match.score1 += 1
+                    self.gameReset = True
+                    self.servingSide = 0
+                else:
+                    if self.team1TouchCount == 0:
+                        Match.score1 += 1
+                        self.servingSide = 0
+                    if ((self.team1TouchCount > 0 
+                    and self.ballHeight + self.ballRadius >= self.height) or
+                    (self.ballHeight - self.ballRadius <= 0 and self.team1TouchCount > 0 )):
+                        Match.score2 += 1
+                        self.servingSide = 1
+                    self.gameReset = True
+                    if self.ballWidth < self.width/2:
+                        self.team2TouchCount = 0
+
+
+            if self.ballWidth < self.width/2:
+                self.team2TouchCount = 0
+                if self.team1TouchCount == 0:
+                    if ((self.ballWidth - self.ballRadius <= 0) or
+                    (self.ballHeight + self.ballRadius >= self.height) or 
+                    (self.ballWidth - self.ballRadius <= 0)): #switch this to if ball lands outside the bounds with the height of ball trajectory being 0
+                        Match.score1 += 1
+                        self.gameReset = True
+                        self.servingSide = 0
+                    else:
+                        #Here have the endpoint of curve be within the court
+                        Match.score2 += 1
+                        self.gameReset = True
+                        self.servingSide = 1
+                        pass
+                elif self.team1TouchCount > 3:
+                    Match.score2 += 1
+                    self.gameReset = True
+                    self.servingSide = 1
+
+            elif self.ballWidth > self.width/2:
+                self.team1TouchCount = 0 
+                if self.team2TouchCount == 0:
+                    if ((self.ballWidth - self.ballRadius >= self.width) or
+                    (self.ballHeight + self.ballRadius >= self.height) or 
+                    (self.ballWidth - self.ballRadius <= 0)): #switch this to if ball lands outside the bounds with the height of ball trajectory being 0
+                        Match.score2 += 1
+                        self.gameReset = True
+                        self.servingSide = 1
+                    else:
+                        #Here have the endpoint of curve be within the court
+                        Match.score1 += 1
+                        self.gameReset = True
+                        self.servingSide = 0
+                        pass
+                elif self.team2TouchCount > 3:
+                    Match.score1 += 1
+                    self.gameReset = True
+                    self.servingSide = 0    
+
 
     def drawHitGage(self, canvas):
         #draw different rectangular regions, and have a dot travel up and down the bounds of the hit gage
@@ -1937,12 +2211,17 @@ class Controls(App):
         canvas.create_rectangle(0,0,self.width,self.height, fill = "#ffeeda")
         Controls.drawControls(self, canvas)
         Controls.drawHomeButton(self, canvas)
+
 class MatchIsOver(App):
     def appStarted(self):
         self.message = "Game Over"
         self.message2 = "Player 1 is the WINNER"
         self.message3 = "Player 2 is the WINNER"
-        self.background = self.loadImage("SunnyBackground.jpg") #Background of a sunny volleyball court
+        self.background = self.loadImage("SunnyBackground.jpg")
+        #Background of a sunny volleyball court
+        #taken from free wallpaper website
+        #t.ly/nlkR
+
         self.Team1 = MatchOptions.Team1
         self.Team2 = MatchOptions.Team2
         
