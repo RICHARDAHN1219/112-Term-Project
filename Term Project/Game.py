@@ -303,9 +303,76 @@ class Match(App):
     
     def appStarted(self):
         Match.resetApp(self)
+        self.america11 = self.loadImage('playerImages/USA/Anderson.png')
+        self.america21 = self.loadImage('playerImages/USA/Averilll.png')
+        self.america31 = self.loadImage('playerImages/USA/DeFalco.png')
+        self.america41 = self.loadImage('playerImages/USA/Maa.png')
+        self.america51 = self.loadImage('playerImages/USA/Micah.png')
+        self.america61 = self.loadImage('playerImages/USA/Russell.png')
+
+        self.japan11 = self.loadImage('playerImages/Japan/Nishida.png')
+        self.japan21 = self.loadImage('playerImages/Japan/Ishikawa.png')
+        self.japan31 = self.loadImage('playerImages/Japan/Fukuzawa.png')
+        self.japan41= self.loadImage('playerImages/Japan/Shimizu.png')
+        self.japan51 = self.loadImage('playerImages/Japan/Takano.png')
+        self.japan61 = self.loadImage('playerImages/Japan/Yamamoto.png')
         
+        self.brazil11 = self.loadImage('playerImages/Russia/Iakovlev.png')
+        self.brazil21 = self.loadImage('playerImages/Russia/Kiliuka.png')
+        self.brazil31 = self.loadImage('playerImages/Russia/Krukaev.png')
+        self.brazil41 = self.loadImage('playerImages/Russia/poletaev.png')
+        self.brazil51 = self.loadImage('playerImages/Russia/Samoylenko.png')
+        self.brazil61 = self.loadImage('playerImages/Russia/Vlasov.png')
         
-    
+        self.russia11 = self.loadImage('playerImages/Brazil/2.png')
+        self.russia21 = self.loadImage('playerImages/Brazil/Buiatti.png')
+        self.russia31 = self.loadImage('playerImages/Brazil/circle-cropped.png')
+        self.russia41 = self.loadImage('playerImages/Brazil/Kreling.png')
+        self.russia51 = self.loadImage('playerImages/Brazil/loh.png')
+        self.russia61 = self.loadImage('playerImages/Brazil/Sobrinho.png')
+
+        self.karasuno11 = self.loadImage('playerImages/Karasuno/Kageyama.png')
+        self.karasuno21 = self.loadImage('playerImages/Karasuno/HinataShoyo.png')
+        self.karasuno31 = self.loadImage('playerImages/Karasuno/Tsukishima.png')
+        self.karasuno41 = self.loadImage('playerImages/Karasuno/Nishinoya.png')
+        self.karasuno51 = self.loadImage('playerImages/Karasuno/Daichi.png')
+        self.karasuno61 = self.loadImage('playerImages/Karasuno/Asahi.png')
+        x = 5/20
+        self.america1 = self.scaleImage(self.america11, x)
+        self.america2 = self.scaleImage(self.america21, x)
+        self.america3 = self.scaleImage(self.america31, x)
+        self.america4 = self.scaleImage(self.america41, x)
+        self.america5 = self.scaleImage(self.america51, x)
+        self.america6 = self.scaleImage(self.america61, x)
+
+        self.japan1 = self.scaleImage(self.japan11, x)
+        self.japan2 = self.scaleImage(self.japan21, x)
+        self.japan3 = self.scaleImage(self.japan31, x)
+        self.japan4= self.scaleImage(self.japan41, x)
+        self.japan5 = self.scaleImage(self.japan51, x)
+        self.japan6 = self.scaleImage(self.japan61, x)
+        
+        self.brazil1 = self.scaleImage(self.brazil11, x)
+        self.brazil2 = self.scaleImage(self.brazil21, x)
+        self.brazil3 = self.scaleImage(self.brazil31, x)
+        self.brazil4 = self.scaleImage(self.brazil41, x)
+        self.brazil5 = self.scaleImage(self.brazil51, x)
+        self.brazil6 = self.scaleImage(self.brazil61, x)
+        
+        self.russia1 = self.scaleImage(self.russia11, x)
+        self.russia2 = self.scaleImage(self.russia21, x)
+        self.russia3 = self.scaleImage(self.russia31, x)
+        self.russia4 = self.scaleImage(self.russia41, x)
+        self.russia5 = self.scaleImage(self.russia51, x)
+        self.russia6 = self.scaleImage(self.russia61, x)
+
+        self.karasuno1 = self.scaleImage(self.karasuno11, x)
+        self.karasuno2 = self.scaleImage(self.karasuno21, x)
+        self.karasuno3 = self.scaleImage(self.karasuno31, x)
+        self.karasuno4 = self.scaleImage(self.karasuno41, x)
+        self.karasuno5 = self.scaleImage(self.karasuno51, x)
+        self.karasuno6 = self.scaleImage(self.karasuno61, x)
+        
     def resetApp(self):
         # This is a helper function for Controllers
         # This initializes most of our model (stored in app.xyz)
@@ -645,8 +712,6 @@ class Match(App):
             MatchIsOver(width = 1920, height = 1028)
         elif self.waitingForKeyPress:
             self.waitingForKeyPress = False
-        elif self.rallyReset:
-            Match.resetRally(self)
         if event.key == "q":
             #switch control to the player to the left of the current one in back row
             self.rowCount = 1
@@ -1548,6 +1613,11 @@ class Match(App):
                     MatchOptions(width=1920, height=1080)
                 if event.y >= self.height/2 + 40 and event.y <= self.height/2 + 100:
                     HomeScreen(width=1920, height=1080)
+        elif self.rallyReset:
+            Match.resetRally(self)
+            self.rallyReset = False
+            if self.servingSide == 1:
+                self.ballVx = -self.ballVx
         '''if (self.ballTime > 3):
                     self.rallyStarts = False
                     if self.ballWidth < self.width/2:
@@ -2701,9 +2771,11 @@ class Match(App):
     def drawTeam1(self, canvas):
         if MatchOptions.PlayerCount == 1:
             canvas.create_oval(self.dot1Width, self.dot1Height, self.dot1Width + 40, self.dot1Height - 40, fill = f"{self.fillTeam1}")
+
         elif MatchOptions.PlayerCount == 2:
             canvas.create_oval(self.dot1WidthFront, self.dot1HeightFront, self.dot1WidthFront + 40, self.dot1HeightFront - 40, fill = f"{self.fillTeam1}", outline = self.fillTeam1Front, width = 3)
             canvas.create_oval(self.dot1WidthBack, self.dot1HeightBack, self.dot1WidthBack + 40, self.dot1HeightBack - 40, fill = f"{self.fillTeam1}", outline = self.fillTeam1Back, width = 3)
+
         elif MatchOptions.PlayerCount == 6:
             canvas.create_oval(self.player1WidthTM, self.player1HeightTM, self.player1WidthTM + 40, self.player1HeightTM - 40, fill = f"{self.fillTeam1}", outline = self.fillTeam1TM, width = 3) #Top Middle
             canvas.create_oval(self.player1WidthBM, self.player1HeightBM, self.player1WidthBM + 40, self.player1HeightBM - 40, fill = f"{self.fillTeam1}", outline = self.fillTeam1BM, width = 3) #Back Middle
@@ -2712,12 +2784,15 @@ class Match(App):
             canvas.create_oval(self.player1WidthTR, self.player1HeightTR, self.player1WidthTR + 40, self.player1HeightTR - 40, fill = f"{self.fillTeam1}", outline = self.fillTeam1TR, width = 3) #Top Right
             canvas.create_oval(self.player1WidthBR, self.player1HeightBR, self.player1WidthBR + 40, self.player1HeightBR - 40, fill = f"{self.fillTeam1}", outline = self.fillTeam1BR, width = 3) #Bottom Right
 
+
     def drawTeam2(self, canvas):
         if MatchOptions.PlayerCount == 1:
             canvas.create_oval(self.dot2Width, self.dot2Height, self.dot2Width + 40, self.dot2Height - 40, fill = f"{self.fillTeam2}")
+
         elif MatchOptions.PlayerCount == 2:
             canvas.create_oval(self.dot2WidthFront, self.dot2HeightFront, self.dot2WidthFront + 40, self.dot2HeightFront - 40, fill = f"{self.fillTeam2}", outline = self.fillTeam2Front, width = 3)
             canvas.create_oval(self.dot2WidthBack, self.dot2HeightBack, self.dot2WidthBack + 40, self.dot2HeightBack - 40, fill = f"{self.fillTeam2}", outline = self.fillTeam2Back, width = 3)
+
         elif MatchOptions.PlayerCount == 6:
             canvas.create_oval(self.player2WidthTM, self.player2HeightTM, self.player2WidthTM + 40, self.player2HeightTM - 40, fill = f"{self.fillTeam2}", outline = self.fillTeam2TM, width = 3) #Top Middle
             canvas.create_oval(self.player2WidthBM, self.player2HeightBM, self.player2WidthBM + 40, self.player2HeightBM - 40, fill = f"{self.fillTeam2}", outline = self.fillTeam2BM, width = 3) #Back Middle
@@ -2725,6 +2800,7 @@ class Match(App):
             canvas.create_oval(self.player2WidthTL, self.player2HeightTL, self.player2WidthTL + 40, self.player2HeightTL - 40, fill = f"{self.fillTeam2}", outline = self.fillTeam2TL, width = 3) #Top Left
             canvas.create_oval(self.player2WidthTR, self.player2HeightTR, self.player2WidthTR + 40, self.player2HeightTR + 40, fill = f"{self.fillTeam2}", outline = self.fillTeam2TR, width = 3) #Top Right
             canvas.create_oval(self.player2WidthBR, self.player2HeightBR, self.player2WidthBR + 40, self.player2HeightBR + 40, fill = f"{self.fillTeam2}", outline = self.fillTeam2BR, width = 3) #Bottom Right
+
 
     def drawVolleyBall(self, canvas):
         '''canvas.create_oval(self.ballWidth-self.ballRadius, 
@@ -2843,7 +2919,7 @@ class Match(App):
         if self.notServed == False:
             Match.drawHitGage(self, canvas)
         if self.rallyStarts == False:
-            canvas.create_text(self.width/2, self.height/2, text = "Press any key to start next rally", font = "Arial 18 bold")
+            canvas.create_text(self.width/2, self.height/2, text = "Click to start next rally", font = "Arial 18 bold")
 
 class Tutorials(App):
     def appStarted(self):
