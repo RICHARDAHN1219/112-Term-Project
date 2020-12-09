@@ -154,7 +154,7 @@ class MatchOptions(App):
         MatchOptions.drawPlayerCount(self, canvas)
         MatchOptions.drawDifficulty(self, canvas)
         MatchOptions.drawContinueButton(self, canvas)
-    
+
 class Sides(App):
     #In this code, we want the different players to select a certain side of the match,
     #so that it could be a 1 v 1 or 2 v AI
@@ -304,9 +304,8 @@ class Match(App):
     score2 = 0
     
     def appStarted(self):
-        self.gameReset = False
         Match.resetApp(self)
-        self.gageActivates = False
+        
         
     
     def resetApp(self):
@@ -314,8 +313,11 @@ class Match(App):
         # This initializes most of our model (stored in app.xyz)
         # This is called when they start the app, and also after
         # the game is over when we restart the app.
+        self.rallyReset = False
         self.notServed = True
+        self.gameReset = False
         self.rallyStarts = False
+        self.gageActivates = False
         self.jumpIsPressed = False
         self.gageValue = 0
         self.gageSD = 0
@@ -405,14 +407,14 @@ class Match(App):
         self.dotGageDx = -30 #Switch speed of this for different difficulties
         self.dotGageDy = -30
         if MatchOptions.Difficulty == "Easy":
-            self.ballSpeed = 20
-            self.ballAngle = 60
-        elif MatchOptions.Difficulty == "Hard":
-            self.ballSpeed = 30
-            self.ballAngle = 80
-        else:
             self.ballSpeed = 25
-            self.ballAngle = 70
+            self.ballAngle = 50
+        elif MatchOptions.Difficulty == "Hard":
+            self.ballSpeed = 35
+            self.ballAngle = 30
+        else:
+            self.ballSpeed = 30
+            self.ballAngle = 40
         Match.resetBallCalculation(self)
         
     def resetBallCalculation(self):
@@ -587,6 +589,12 @@ class Match(App):
             self.gageDotHeight = self.dot2Height
         self.gageDotRadius = 15
         self.gagePressCount = 0
+    
+    def resetRally(self):
+        Match.resetPlayer1(self)
+        Match.resetPlayer2(self)
+        Match.resetBall(self)
+        Match.resetGage(self)
     '''def drawCourt(self, canvas):
         canvas.create_rectangle(0,0,self.width,self.height,fill = "#ffeeda")
         canvas.create_image(1366/2, 705/2 + 30, image=ImageTk.PhotoImage(self.courtimage))
@@ -611,7 +619,7 @@ class Match(App):
             Match.moveBall1(self)
             Match.doMoveP2AI(self)
             Match.doMoveP1AI(self)
-            if self.ballTime < 4:
+            if self.ballTime < 3:
                 Match.step(self)
     def doGage(self):
         if self.gageActivates == True:
@@ -624,13 +632,21 @@ class Match(App):
         Match.movePlayer1AI(self)
     
     def keyPressed(self, event):
+        if Match.score1 == 25 and Match.score2 < 24:
+            self.gameOver = True
+        elif Match.score2 == 25 and Match.score1 < 24:
+            self.gameOver = True
+        elif Match.score1>25 and Match.score2 > 25:
+            if Match.score1 > Match.score2 + 1 or Match.score2 > Match.score1 + 1:
+                self.gameOver = True
         if self.gameReset:
             Match.resetApp(self)
-            self.gameReset = False
         elif self.gameOver:
             MatchIsOver(width = 1920, height = 1028)
         elif self.waitingForKeyPress:
             self.waitingForKeyPress = False
+        elif self.rallyReset:
+            Match.resetRally(self)
         if event.key == "q":
             #switch control to the player to the left of the current one in back row
             self.rowCount = 1
@@ -879,23 +895,26 @@ class Match(App):
             self.notServed = not self.notServed
         elif event.key == "1":
             self.serveOption = 1
+            self.rallyStarts = True
             Match.topSpinServe(self,event)
         elif event.key == "2":
             self.serveOption = 2
+            self.rallyStarts = True
             Match.topSpinServe(self,event)
         elif event.key == "3":
+            self.rallyStarts = True
             Match.floaterServe(self,event)
         elif event.key == "4":
-            Match.toss(self,event)
+            Match.toss(self)
         elif event.key == "5":
-            Match.spike(self,event)
+            Match.spike(self)
         elif event.key == "i":
             self.jumpIsPressed = True
         if self.jumpIsPressed == True:
             if event.key == "1":
-                Match.toss(self, event)
+                Match.toss(self)
             elif event.key == "2":
-                Match.spike(self, event)
+                Match.spike(self)
         if MatchOptions.PlayerCount == 2:
             if Sides.playersInTeam1 != []: 
                 if self.topCount % 2 == 1:
@@ -1009,57 +1028,8 @@ class Match(App):
                         self.fillTeam2BM = "blue"
                         self.fillTeam2BL = "blue"
                         self.fillTeam2BR = "purple"
-        if self.touchCount > 0:
-            if (self.ballTime > 3):
-                #if (self.ballY < self.ballHeight):
-                    self.rallyStarts = False
-                    if self.ballWidth < (self.width/2):
-                        Match.resetPlayer2TouchCount(self)
-                        if ((self.ballWidth <= self.bottomLineL) or 
-                            ((self.ballHeight >= self.courtNetTop) or 
-                            (self.ballHeight <= self.courtNetBottom))): #switch this to if ball lands outside the bounds with the height of ball trajectory being 0
-                            if self.team1TouchCount == 0:
-                                Match.score1 += 1
-                                self.gameReset = True
-                                self.servingSide = 0
-                            else:
-                                Match.score2 += 1
-                                self.gameReset = True
-                                self.servingSide = 1
-                        elif ((self.courtNetBottom <= self.ballHeight <= self.courtNetTop) and 
-                            (self.bottomLineL <=self.ballWidth <= self.width/2)):
-                                #Here have the endpoint of curve be within the court
-                                Match.score2 += 1
-                                self.gameReset = True
-                                self.servingSide = 1
-                        elif self.team1TouchCount > 3:
-                            Match.score2 += 1
-                            self.gameReset = True
-                            self.servingSide = 1
-                    elif self.ballWidth > (self.width/2):
-                        Match.resetPlayer1TouchCount(self)
-                        self.team1TouchCount = 0 
-                        if ((self.ballWidth >= self.bottomLineR) or 
-                            ((self.ballHeight >= self.courtNetTop) or 
-                            (self.ballHeight <= self.courtNetBottom))): #switch this to if ball lands outside the bounds with the height of ball trajectory being 0
-                                if self.team2TouchCount == 0:
-                                    Match.score2 += 1
-                                    self.gameReset = True
-                                    self.servingSide = 1
-                                else:
-                                    Match.score1 += 1
-                                    self.gameReset = True
-                                    self.servingSide = 0
-                        elif ((self.courtNetBottom <= self.ballHeight <= self.courtNetTop) and 
-                            (self.width/2 <=self.ballWidth <= self.bottomLineR)):
-                                #Here have the endpoint of curve be within the court
-                                Match.score1 += 1
-                                self.gameReset = True
-                                self.servingSide = 0
-                        elif self.team2TouchCount > 3:
-                            Match.score1 += 1
-                            self.gameReset = True
-                            self.servingSide = 0
+        #if (self.ballY < self.ballHeight):
+        
         #insert score calculation here if not working in separate function 
     '''def mousePressed(self, event):
         #Continue button is pressed
@@ -1068,62 +1038,9 @@ class Match(App):
         pass'''
 
 
-    '''def scoreCalculator(self, event):
-        if self.touchCount > 0:
-                if (self.ballY < self.ballHeight):
-                    self.rallyStarts = False
-                    if self.ballWidth < self.width/2:
-                        self.team2TouchCount = 0
-                        if ((self.ballWidth <= self.bottomLineL) or
-                            (self.ballHeight >= self.courtNetTop) or 
-                            (self.ballWidth <= self.courtNetBottom)): #switch this to if ball lands outside the bounds with the height of ball trajectory being 0
-                            if self.team1TouchCount == 0:
-                                Match.score1 += 1
-                            else:
-                                Match.score2 += 1
-                            self.gameReset = True
-                            self.servingSide = 0
-                        elif ((self.courtNetBottom <= self.ballHeight <= self.courtNetTop) and 
-                            (self.bottomLineL <=self.ballWidth <= self.width/2)):
-                                #Here have the endpoint of curve be within the court
-                                Match.score2 += 1
-                                self.gameReset = True
-                                self.servingSide = 1
-                        elif self.team1TouchCount > 3:
-                            Match.score2 += 1
-                            self.gameReset = True
-                            self.servingSide = 1
-
-                    elif self.ballWidth > self.width/2:
-                        self.team1TouchCount = 0 
-                        if self.team2TouchCount == 0:
-                            if ((self.ballWidth - self.ballRadius >= self.width) or
-                            (self.ballHeight + self.ballRadius >= self.height) or 
-                            (self.ballWidth - self.ballRadius <= 0)): #switch this to if ball lands outside the bounds with the height of ball trajectory being 0
-                                Match.score2 += 1
-                                self.gameReset = True
-                                self.servingSide = 1
-                        elif ((self.courtNetBottom <= self.ballHeight <= self.courtNetTop) and 
-                            (self.width/2 <=self.ballWidth <= self.bottomLineR)):
-                                #Here have the endpoint of curve be within the court
-                                Match.score1 += 1
-                                self.gameReset = True
-                                self.servingSide = 0
-                        elif self.team2TouchCount > 3:
-                            Match.score1 += 1
-                            self.gameReset = True
-                            self.servingSide = 0  ''' 
-
-    def mousePressed(self, event):
-        if event.x >= self.width/2 - 90 and event.x <= self.width/2 + 90:
-            if event.y >= self.height/2 - 160 and event.y <= self.height/2 - 100:
-                Match.resetApp(self)
-                Match.score1 = 0
-                Match.score2 = 0
-            if event.y >= self.height/2 - 60 and event.y <= self.height/2:
-                MatchOptions(width=1920, height=1080)
-            if event.y >= self.height/2 + 40 and event.y <= self.height/2 + 100:
-                HomeScreen(width=1920, height=1080)
+    def scoreCalculator(self):
+        pass
+            
            
 
 
@@ -1341,10 +1258,14 @@ class Match(App):
             # The dot went off the top!
             self.ballWidth = self.ballRadius
             self.ballVx = -self.ballVx'''
-        if (self.ballTime < 4): 
+        if (self.ballTime < 3): 
         #if self.ballY >= self.ballHeight:       
             self.ballWidth += Match.VxCalculator(self, self.ballDt)
             self.ballHeight -= Match.VyCalculator(self, self.ballDt)
+            if self.ballWidth > self.width/2:
+                self.team1TouchCount = 0
+            elif self.ballWidth < self.width/2:
+                self.team2TouchCount = 0
             if Match.ballIntersectsTeam1(self):
                 Match.resetBallCalculation(self)
                 self.ballTime = 0
@@ -1379,11 +1300,90 @@ class Match(App):
                         self.dotDy = dToMiddleY / dampeningFactor
                         self.touchCount += 1
                         self.team1TouchCount += 1'''
+
+                elif MatchOptions.PlayerCount == 6:
+                    if ((self.player1WidthTL < self.ballWidth < self.player1WidthTL + 40  
+                        and self.player1HeightTL-40 < self.ballHeight < self.player1HeightTL) or 
+                        (self.player1WidthTM < self.ballWidth < self.player1WidthTM + 40  
+                        and self.player1HeightTM-40 < self.ballHeight < self.player1HeightBM) or 
+                        (self.player1WidthTR < self.ballWidth < self.player1WidthTR + 40  
+                        and self.player1HeightTR-40 < self.ballHeight < self.player1HeightTR)):
+                        self.ballVx = self.ballVx
+                        self.touchCount += 1
+                        self.team1TouchCount += 1
+
+                        if (self.player1WidthTL < self.ballWidth < self.player1WidthTL + 40  
+                        and self.player1HeightTL-40 < self.ballHeight < self.player1HeightTL):
+                            self.ballWidth = self.player1WidthTL - self.ballRadius
+                            if self.team1TouchCount == 1:
+                                Match.receive(self)
+                            elif self.team1TouchCount == 2:
+                                Match.toss(self) 
+                            elif self.team1TouchCount == 3:
+                                Match.spike(self)
+
+                        elif (self.player1WidthTM < self.ballWidth < self.player1WidthTM + 40  
+                        and self.player1HeightTM-40 < self.ballHeight < self.player1HeightTM):
+                            self.ballWidth = self.player1WidthTM - self.ballRadius
+                            if self.team1TouchCount == 1:
+                                Match.receive(self)
+                            elif self.team1TouchCount == 2:
+                                Match.toss(self) 
+                            elif self.team1TouchCount == 3:
+                                Match.spike(self)
+
+                        elif (self.player1WidthTR < self.ballWidth < self.player1WidthTR + 40  
+                        and self.player1HeightTR-40 < self.ballHeight < self.player1HeightTR):
+                            self.ballWidth = self.player1WidthTR - self.ballRadius
+                            if self.team1TouchCount == 1:
+                                Match.receive(self)
+                            elif self.team1TouchCount == 2:
+                                Match.toss(self) 
+                            elif self.team1TouchCount == 3:
+                                Match.spike(self)
+                        
+                    elif ((self.player1WidthBL < self.ballWidth < self.player1WidthBL + 40  
+                        and self.player1HeightBL-40 < self.ballHeight < self.player1HeightBL) or 
+                        (self.player1WidthBM < self.ballWidth < self.player1WidthBM + 40  
+                        and self.player1HeightBM-40 < self.ballHeight < self.player1HeightBM) or 
+                        (self.player1WidthBR < self.ballWidth < self.player1WidthBR + 40  
+                        and self.player1HeightBR-40 < self.ballHeight < self.player1HeightBR)):
+                        self.ballVx = self.ballVx * .5
+
+                        if (self.player1WidthBL < self.ballWidth < self.player1WidthBL + 40  
+                        and self.player1HeightBL-40 < self.ballHeight < self.player1HeightBL):
+                            self.ballWidth = self.player1WidthBL - self.ballRadius
+                            if self.team1TouchCount == 1:
+                                Match.receive(self)
+                            elif self.team1TouchCount == 2:
+                                Match.toss(self) 
+                            elif self.team1TouchCount == 3:
+                                Match.spike(self)
+                        elif (self.player1WidthBM < self.ballWidth < self.player1WidthBM + 40  
+                        and self.player1HeightBM-40 < self.ballHeight < self.player1HeightBM):
+                            self.ballWidth = self.player1WidthBM - self.ballRadius
+                            if self.team1TouchCount == 1:
+                                Match.receive(self)
+                            elif self.team1TouchCount == 2:
+                                Match.toss(self) 
+                            elif self.team1TouchCount == 3:
+                                Match.spike(self)
+                        elif (self.player1WidthBR < self.ballWidth < self.player1WidthBR + 40  
+                        and self.player1HeightBR-40 < self.ballHeight < self.player1HeightBR):
+                            self.ballWidth = self.player1WidthBR - self.ballRadius
+                            if self.team1TouchCount == 1:
+                                Match.receive(self)
+                            elif self.team1TouchCount == 2:
+                                Match.toss(self) 
+                            elif self.team1TouchCount == 3:
+                                Match.spike(self)
+
             elif Match.ballIntersectsTeam2(self):
                 self.ballTime = 0
                 Match.resetBallCalculation(self)
                 if MatchOptions.PlayerCount == 1:
                     self.ballVx = -self.ballVx
+
                 elif MatchOptions.PlayerCount == 2:
                     if (self.dot2WidthFront < self.ballWidth < self.dot2WidthFront + 40  
                             and self.dot2HeightFront-40 < self.ballHeight < self.dot2HeightFront):
@@ -1405,9 +1405,200 @@ class Match(App):
                             Match.toss(self)
                         elif self.team2TouchCount == 3:
                             Match.spike(self)
+
+                elif MatchOptions.PlayerCount == 6:
+                    if ((self.player2WidthTL < self.ballWidth < self.player2WidthTL + 40  
+                        and self.player2HeightTL-40 < self.ballHeight < self.player2HeightTL) or
+                        (self.player2WidthTM < self.ballWidth < self.player2WidthTM + 40  
+                        and self.player2HeightTM-40 < self.ballHeight < self.player2HeightBM) or
+                        (self.player2WidthTR < self.ballWidth < self.player1WidthTR + 40  
+                        and self.player2HeightTR-40 < self.ballHeight < self.player2HeightTR)):
+                        self.ballVx = -self.ballVx
+                        self.touchCount += 1
+                        self.team2TouchCount += 1
+                        if (self.player2WidthTL < self.ballWidth < self.player2WidthTL + 40  
+                        and self.player2HeightTL-40 < self.ballHeight < self.player2HeightTL):
+                            self.ballWidth = self.player2WidthTL - self.ballRadius
+                            if self.team1TouchCount == 1:
+                                Match.receive(self)
+                            elif self.team1TouchCount == 2:
+                                Match.toss(self) 
+                            elif self.team1TouchCount == 3:
+                                Match.spike(self)
+                        if (self.player2WidthTM < self.ballWidth < self.player2WidthTM + 40  
+                        and self.player2HeightTM-40 < self.ballHeight < self.player2HeightTM):
+                            self.ballWidth = self.player2WidthTL - self.ballRadius
+                            if self.team1TouchCount == 1:
+                                Match.receive(self)
+                            elif self.team1TouchCount == 2:
+                                Match.toss(self) 
+                            elif self.team1TouchCount == 3:
+                                Match.spike(self)
+                        if (self.player2WidthTR < self.ballWidth < self.player2WidthTR + 40  
+                        and self.player2HeightTR-40 < self.ballHeight < self.player1HeightTR):
+                            self.ballWidth = self.player2WidthTR - self.ballRadius
+                            if self.team1TouchCount == 1:
+                                Match.receive(self)
+                            elif self.team1TouchCount == 2:
+                                Match.toss(self) 
+                            elif self.team1TouchCount == 3:
+                                Match.spike(self)
+                        
+                    elif ((self.player2WidthBL < self.ballWidth < self.player2WidthBL + 40  
+                        and self.player2HeightBL-40 < self.ballHeight < self.player2HeightBL) or 
+                        (self.player2WidthBM < self.ballWidth < self.player2WidthBM + 40  
+                        and self.player2HeightBM-40 < self.ballHeight < self.player2HeightBM) or 
+                        (self.player2WidthBR < self.ballWidth < self.player2WidthBR + 40  
+                        and self.player2HeightBR-40 < self.ballHeight < self.player2HeightBR)):
+                        self.ballVx = -self.ballVx * .5
+                        self.touchCount += 1
+                        self.team2TouchCount += 1
+
+                        if (self.player2WidthBL < self.ballWidth < self.player2WidthBL + 40  
+                        and self.player2HeightBL-40 < self.ballHeight < self.player2HeightBL):
+                            self.ballWidth = self.player2WidthBL - self.ballRadius
+                            if self.team1TouchCount == 1:
+                                Match.receive(self)
+                            elif self.team1TouchCount == 2:
+                                Match.toss(self) 
+                            elif self.team1TouchCount == 3:
+                                Match.spike(self)
+                        if (self.player2WidthBM < self.ballWidth < self.player2WidthBM + 40  
+                        and self.player2HeightBM-40 < self.ballHeight < self.player2HeightBM):
+                            self.ballWidth = self.player2WidthBM - self.ballRadius
+                            if self.team1TouchCount == 1:
+                                Match.receive(self)
+                            elif self.team1TouchCount == 2:
+                                Match.toss(self) 
+                            elif self.team1TouchCount == 3:
+                                Match.spike(self)
+                        if (self.player2WidthBR < self.ballWidth < self.player2WidthBR + 40  
+                        and self.player2HeightBR-40 < self.ballHeight < self.player2HeightBR):
+                            self.ballWidth = self.player2WidthBR - self.ballRadius
+                            if self.team1TouchCount == 1:
+                                Match.receive(self)
+                            elif self.team1TouchCount == 2:
+                                Match.toss(self) 
+                            elif self.team1TouchCount == 3:
+                                Match.spike(self)
         else:
-            self.rallyStarts = False
+            if (self.ballTime > 2):
+                if self.ballY < self.ballHeight:
+                    self.rallyStarts = False
+                    if self.ballWidth < self.width/2:
+                        self.team2TouchCount = 0
+                        if ((self.ballWidth <= self.bottomLineL) or
+                            (self.ballHeight >= self.courtNetTop) or 
+                            (self.ballWidth <= self.courtNetBottom)): #switch this to if ball lands outside the bounds with the height of ball trajectory being 0
+                            if self.team1TouchCount == 0:
+                                Match.score1 += 1
+                                self.servingSide = 0
+                                self.rallyReset = True
+                            else:
+                                Match.score2 += 1
+                                self.servingSide = 1
+                                self.rallyReset = True
+                        elif ((self.courtNetBottom <= self.ballHeight <= self.courtNetTop) and 
+                            (self.bottomLineL <=self.ballWidth <= self.width/2)):
+                                #Here have the endpoint of curve be within the court
+                                Match.score2 += 1
+                                self.servingSide = 1
+                                self.rallyReset = True
+                        elif self.team1TouchCount > 3:
+                            Match.score2 += 1
+                            self.servingSide = 1
+                            self.rallyReset = True
+
+                    elif self.ballWidth > self.width/2:
+                        self.team1TouchCount = 0 
+                        if self.team2TouchCount == 0:
+                            if ((self.ballWidth - self.ballRadius >= self.width) or
+                            (self.ballHeight + self.ballRadius >= self.height) or 
+                            (self.ballWidth - self.ballRadius <= 0)): #switch this to if ball lands outside the bounds with the height of ball trajectory being 0
+                                Match.score2 += 1
+                                self.servingSide = 1
+                                self.rallyReset = True
+                        elif ((self.courtNetBottom <= self.ballHeight <= self.courtNetTop) and 
+                            (self.width/2 <=self.ballWidth <= self.bottomLineR)):
+                                #Here have the endpoint of curve be within the court
+                                if self.team2TouchCount == 0:
+                                    Match.score2 += 1
+                                    self.servingSide = 1
+                                    self.rallyReset = True
+                                else:
+                                    Match.score1 += 1
+                                    self.servingSide = 0
+                                    self.rallyReset = True
+                        elif self.team2TouchCount > 3:
+                            Match.score1 += 1
+                            self.servingSide = 0
+                            self.rallyReset = True
+                    self.rallyStarts = False   
+
+    def mousePressed(self, event):
+        if self.paused == True:
+            if event.x >= self.width/2 - 90 and event.x <= self.width/2 + 90:
+                if event.y >= self.height/2 - 160 and event.y <= self.height/2 - 100:
+                    Match.resetApp(self)
+                    Match.score1 = 0
+                    Match.score2 = 0
+                if event.y >= self.height/2 - 60 and event.y <= self.height/2:
+                    MatchOptions(width=1920, height=1080)
+                if event.y >= self.height/2 + 40 and event.y <= self.height/2 + 100:
+                    HomeScreen(width=1920, height=1080)
+        if (self.ballTime > 3):
+                    self.rallyStarts = False
+                    if self.ballWidth <= self.width/2:
+                        self.team2TouchCount = 0
+                        if ((self.ballWidth <= self.bottomLineL) or
+                            (self.ballHeight >= self.courtNetTop) or 
+                            (self.ballWidth <= self.courtNetBottom)): #switch this to if ball lands outside the bounds with the height of ball trajectory being 0
+                            if self.team1TouchCount == 0:
+                                Match.score1 += 1
+                                self.servingSide = 0
+                                self.rallyReset = True
+                            else:
+                                Match.score2 += 1
+                                self.servingSide = 1
+                                self.rallyReset = True
+                        elif ((self.courtNetBottom <= self.ballHeight <= self.courtNetTop) and 
+                            (self.bottomLineL <=self.ballWidth <= self.width/2)):
+                                #Here have the endpoint of curve be within the court
+                                Match.score2 += 1
+                                self.servingSide = 1
+                                self.rallyReset = True
+                        elif self.team1TouchCount > 3:
+                            Match.score2 += 1
+                            self.servingSide = 1
+                            self.rallyReset = True
+
+                    elif self.ballWidth > self.width/2:
+                        self.team1TouchCount = 0 
+                        if self.team2TouchCount == 0:
+                            if ((self.ballWidth - self.ballRadius >= self.width) or
+                            (self.ballHeight + self.ballRadius >= self.height) or 
+                            (self.ballWidth - self.ballRadius <= 0)): #switch this to if ball lands outside the bounds with the height of ball trajectory being 0
+                                Match.score2 += 1
+                                self.servingSide = 1
+                                self.rallyReset = True
+                        elif ((self.courtNetBottom <= self.ballHeight <= self.courtNetTop) and 
+                            (self.width/2 <=self.ballWidth <= self.bottomLineR)):
+                                #Here have the endpoint of curve be within the court
+                                if self.team2TouchCount == 0:
+                                    Match.score2 += 1
+                                    self.servingSide = 1
+                                    self.rallyReset = True
+                                else:
+                                    Match.score1 += 1
+                                    self.servingSide = 0
+                                    self.rallyReset = True
+                        elif self.team2TouchCount > 3:
+                            Match.score1 += 1
+                            self.servingSide = 0 
+                            self.rallyReset = True     
+                    self.rallyStarts = False
         
+
     def ballIntersectsTeam1(self):
         if MatchOptions.PlayerCount == 1:
             return ((self.dot1Width <= self.ballWidth <= self.dot1Width + 40) 
@@ -1517,9 +1708,6 @@ class Match(App):
             self.ballHeight -= 15
 
     def movePlayer1AI(self):
-        if Match.distance(self.ballWidth, self.ballHeight, self.dot1WidthFront, self.dot1HeightFront) < 5 and self.team1TouchCount == 0:
-            self.dot1WidthFront += 20
-            self.dot1HeightFront -= 30
         if Sides.playersInTeam1 == []:
             if MatchOptions.PlayerCount == 1:
                 if self.dot1Width <self.ballWidth < self.courtNetX: #If the ball is on the left side of the player on screen
@@ -1551,6 +1739,9 @@ class Match(App):
                     else:
                         self.dot1Height += 3
             elif MatchOptions.PlayerCount == 2:
+                if Match.distance(self.dot1WidthFront, self.dot1HeightFront, self.dot1WidthBack, self.dot1HeightBack) < 10:
+                    self.servingSide = 1
+                    Match.resetPlayer1(self)
                 if self.dot1WidthFront <self.ballWidth < self.courtNetX: #If the ball is on the left side of the player on screen
                     if MatchOptions.Difficulty == "Easy":
                         self.dot1WidthFront += 1
@@ -1618,6 +1809,23 @@ class Match(App):
                     if Match.ballIntersectsTeam1(self):
                         Match.spike(self)             
             elif MatchOptions.PlayerCount == 6:
+                if ((Match.distance(self.player1WidthTL, self.player1HeightTL, self.player1WidthTM, self.player1HeightTM) < 10) or 
+                    Match.distance(self.player1WidthTL, self.player1HeightTL, self.player1WidthTR, self.player1HeightTR) < 10 or
+                    Match.distance(self.player1WidthTL, self.player1HeightTL, self.player1WidthBR, self.player1HeightBR) < 10 or 
+                    Match.distance(self.player1WidthTL, self.player1HeightTL, self.player1WidthBL, self.player1HeightBL) < 10 or
+                    Match.distance(self.player1WidthTL, self.player1HeightTL, self.player1WidthBM, self.player1HeightBM) < 10 or
+                    Match.distance(self.player1WidthTM, self.player1HeightTM, self.player1WidthBR, self.player1HeightBR) < 10 or
+                    Match.distance(self.player1WidthTM, self.player1HeightTM, self.player1WidthBL, self.player1HeightBL) < 10 or
+                    Match.distance(self.player1WidthTM, self.player1HeightTM, self.player1WidthBM, self.player1HeightBM) < 10 or 
+                    Match.distance(self.player1WidthTM, self.player1HeightTM, self.player1WidthTR, self.player1HeightTR) < 10 or
+                    Match.distance(self.player1WidthTR, self.player1HeightTR, self.player1WidthBL, self.player1HeightBL) < 10 or
+                    Match.distance(self.player1WidthTR, self.player1HeightTR, self.player1WidthBM, self.player1HeightBM) < 10 or
+                    Match.distance(self.player1WidthTR, self.player1HeightTR, self.player1WidthBR, self.player1HeightBR) < 10 or
+                    Match.distance(self.player1WidthBR, self.player1HeightBR, self.player1WidthBM, self.player1HeightBM) < 10 or
+                    Match.distance(self.player1WidthBR, self.player1HeightBR, self.player1WidthBL, self.player1HeightBL) < 10 or
+                    Match.distance(self.player1WidthBM, self.player1HeightBM, self.player1WidthBL, self.player1HeightBL) < 10):
+                        self.servingSide = 1
+                        Match.resetPlayer1(self)
                 if self.player1WidthTL <self.ballWidth < self.courtNetX: #If the ball is on the left side of the player on screen
                     if MatchOptions.Difficulty == "Easy":
                         self.player1WidthTL += 1
@@ -1810,6 +2018,9 @@ class Match(App):
                         self.dot2Height += 5
 
             elif MatchOptions.PlayerCount == 2:
+                if Match.distance(self.dot2WidthFront, self.dot2HeightFront, self.dot2WidthBack, self.dot2HeightBack) < 10:
+                    self.servingSide = 0
+                    Match.resetPlayer2(self)
                 if self.courtNetX <self.ballWidth < self.dot2WidthFront: #If the ball is on the left side of the player on screen
                     if MatchOptions.Difficulty == "Easy":
                         self.dot2WidthFront -= 1
@@ -1877,6 +2088,24 @@ class Match(App):
                     if Match.ballIntersectsTeam2(self):
                         Match.spike(self)   
             elif MatchOptions.PlayerCount == 6:
+                    if ((Match.distance(self.player2WidthTL, self.player2HeightTL, self.player2WidthTM, self.player2HeightTM) < 10) or 
+                    Match.distance(self.player2WidthTL, self.player2HeightTL, self.player2WidthTR, self.player2HeightTR) < 10 or
+                    Match.distance(self.player2WidthTL, self.player2HeightTL, self.player2WidthBR, self.player2HeightBR) < 10 or 
+                    Match.distance(self.player2WidthTL, self.player2HeightTL, self.player2WidthBL, self.player2HeightBL) < 10 or
+                    Match.distance(self.player2WidthTL, self.player2HeightTL, self.player2WidthBM, self.player2HeightBM) < 10 or
+                    Match.distance(self.player2WidthTM, self.player2HeightTM, self.player2WidthBR, self.player2HeightBR) < 10 or
+                    Match.distance(self.player2WidthTM, self.player2HeightTM, self.player2WidthBL, self.player2HeightBL) < 10 or
+                    Match.distance(self.player2WidthTM, self.player2HeightTM, self.player2WidthBM, self.player2HeightBM) < 10 or 
+                    Match.distance(self.player2WidthTM, self.player2HeightTM, self.player2WidthTR, self.player2HeightTR) < 10 or
+                    Match.distance(self.player2WidthTR, self.player2HeightTR, self.player2WidthBL, self.player2HeightBL) < 10 or
+                    Match.distance(self.player2WidthTR, self.player2HeightTR, self.player2WidthBM, self.player2HeightBM) < 10 or
+                    Match.distance(self.player2WidthTR, self.player2HeightTR, self.player2WidthBR, self.player2HeightBR) < 10 or
+                    Match.distance(self.player2WidthBR, self.player2HeightBR, self.player2WidthBM, self.player2HeightBM) < 10 or
+                    Match.distance(self.player2WidthBR, self.player2HeightBR, self.player2WidthBL, self.player2HeightBL) < 10 or
+                    Match.distance(self.player2WidthBM, self.player2HeightBM, self.player2WidthBL, self.player2HeightBL) < 10):
+                        self.servingSide = 0
+                        Match.resetPlayer2(self)
+                    
                     if self.courtNetX <self.ballWidth < self.player2WidthTL: #If the ball is on the left side of the player on screen
                         if MatchOptions.Difficulty == "Easy":
                             self.player2WidthTL -= 1
@@ -2040,28 +2269,37 @@ class Match(App):
         return math.sqrt(((x0-x1)**2)+((y0-y1)**2) )
 
     def topSpinServe(self, event):
-        self.rallyStarts = True
         self.gageActivates = not self.gageActivates
         self.notServed = not self.notServed
         self.gagePressCount += 1
         if self.gagePressCount % 2==0 and self.gagePressCount > 0:
-            Match.resetGage(self)
+            if self.servingSide == 0:
+                if self.serveOption == 1:
+                    self.ballAngle = 50
+                    self.ballVy = .85 * self.ballVy
+                if self.serveOption == 2:
+                    self.ballAngle = 40
+                    self.ballVy = 1.15 * self.ballVy
+                Match.resetGage(self)
+            if self.servingSide == 1:
+                if self.serveOption == 1:
+                    self.ballAngle = 50
+                    self.ballVy = .85 * self.ballVy
+                if self.serveOption == 2:
+                    self.ballAngle = 40
+                    self.ballVy = 1.15 * self.ballVy
+                Match.resetGage(self)
+                self.ballVx = -self.ballVx
         #if player 1 is serving
-        self.rallyStarts = True
-        self.ballVx = self.ballVx * 1
-        if self.servingSide == 1:
-            self.ballVx = -self.ballVx
-        if self.serveOption == 1:
-            self.ballAngle = 20
-            self.ballVy = .85 * self.ballVy
-        if self.serveOption == 2:
-            self.ballAngle = 40
-            self.ballVy = 1.15 * self.ballVy
+        
 
     def floaterServe(self, event):
-        self.rallyStarts = True
-        self.dotDx = -self.dotDx
-        self.dotDy = random.randint(-3, -1)
+        if self.servingSide == 0:
+            self.ballVx = self.ballVx
+            self.ballVy = random.randint(-3, -1)
+        if self.servingSide == 1:
+            self.ballVx = -self.ballVx
+            self.ballVy = random.randint(-3, -1)
 
     def toss(self):
         self.touchCount += 1
@@ -2076,11 +2314,10 @@ class Match(App):
         distanceBallBack2 = Match.distance(self.dot2WidthBack, self.dot2HeightBack, self.ballWidth, self.ballHeight)
         distanceBallFront2 = Match.distance(self.dot2WidthFront, self.dot2HeightFront, self.ballWidth, self.ballHeight)
         if MatchOptions.PlayerCount == 2:
-            if self.ballWidth > self.width/2:
+            '''if self.ballWidth > self.width/2:
                 if distanceBallFront2 < distanceBallBack2:
                     if not (self.dot2WidthBack < self.ballWidth < self.dot2WidthBack + 40  
                     and self.dot2HeightBack-40 < self.ballHeight < self.dot2HeightBack):
-                        self.ballSpeed = .25 * self.ballSpeed
                         self.ballAngle = 80
                 elif distanceBallFront2 > distanceBallBack2:
                     if not (self.dot2WidthFront < self.ballWidth < self.dot2WidthFront + 40  
@@ -2092,14 +2329,25 @@ class Match(App):
                 if distanceBallFront1 < distanceBallBack1:
                     if not (self.dot1WidthBack < self.ballWidth < self.dot1WidthBack + 40  
                     and self.dot1HeightBack-40 < self.ballHeight < self.dot1HeightBack):
-                        self.ballSpeed = .25 * self.ballSpeed
                         self.ballAngle = 80
                 elif distanceBallFront1 > distanceBallBack1:
                     if not (self.dot1WidthFront < self.ballWidth < self.dot1WidthFront + 40  
                     and self.dot1HeightFront-40 < self.ballHeight < self.dot1HeightFront):
-                        self.ballSpeed = .25 * self.ballSpeed
                         self.ballVx = -self.ballVx
-                        self.ballAngle = 80
+                        self.ballAngle = 80'''
+                
+            if distanceBallFront2 < distanceBallBack2:
+                self.ballWidth = self.dot2WidthBack
+                self.ballHeight = self.dot2HeightBack
+            elif distanceBallFront2 > distanceBallBack2:
+                self.ballWidth = self.dot2WidthFront
+                self.ballHeight = self.dot2HeightFront
+            if distanceBallFront1 < distanceBallBack1:
+                self.ballWidth = self.dot1WidthBack
+                self.ballHeight = self.dot1HeightBack
+            elif distanceBallFront1 > distanceBallBack1:
+                self.ballWidth = self.dot1WidthFront
+                self.ballHeight = self.dot1HeightFront
             self.ballSpeed = self.ballSpeed * .9
 
     def spike(self):
@@ -2137,28 +2385,89 @@ class Match(App):
                     elif (self.dot1WidthBack < self.ballWidth < self.dot1WidthBack + 40  
                     and self.dot1HeightBack-40 < self.ballHeight < self.dot1HeightBack):
                         self.ballWidth , self.ballHeight = random.choice(self.gapsTeam1)
+        if MatchOptions.PlayerCount == 6:
+                if self.ballWidth < self.width/2:
+                    distance1 = int(Match.distance(self.player1WidthTL, self.player1HeightTL,
+                                            self.player1WidthBL, self.player1HeightBL))
+                    distance2 = int(Match.distance(self.player1WidthTR, self.player1HeightTR,
+                                self.player1WidthBR, self.player1HeightBR))
+                    distance3 = int(Match.distance(self.player1WidthTM, self.player1HeightTM,
+                                self.player1WidthBM, self.player1HeightBM))
+                    self.gapsTeam2.append(((self.player1WidthTL + self.player1WidthBL)/2, self.player1HeightTL))
+                    self.gapsTeam2.append(((self.player1WidthTL + self.player1WidthBL)/2, (self.player1HeightTL + self.player1HeightBL)/2))
+                    self.gapsTeam2.append(((self.player1WidthTL - distance1/2, self.player1HeightTL)))
+                    self.gapsTeam2.append(((self.player1WidthTL + distance1/2, self.player1HeightTL)))
+                    self.gapsTeam2.append(((self.player1WidthTL, self.player1HeightTL + distance1/2)))
+                    self.gapsTeam2.append(((self.player1WidthTL, self.player1HeightTL - distance1/2)))
+                    self.gapsTeam2.append(((self.player1WidthTL, (self.player1HeightTL + self.player1HeightBL)/2)))
+
+                    self.gapsTeam2.append(((self.player1WidthTR + self.player1WidthBR)/2, self.player1HeightTR))
+                    self.gapsTeam2.append(((self.player1WidthTR + self.player1WidthBR)/2, (self.player1HeightTR + self.player1HeightBR)/2))
+                    self.gapsTeam2.append(((self.player1WidthTR - distance2/2, self.player1HeightTR)))
+                    self.gapsTeam2.append(((self.player1WidthTR + distance2/2, self.player1HeightTR)))
+                    self.gapsTeam2.append(((self.player1WidthTR, self.player1HeightTR + distance2/2)))
+                    self.gapsTeam2.append(((self.player1WidthTR, self.player1HeightTR - distance2/2)))
+                    self.gapsTeam2.append(((self.player1WidthTR, (self.player1HeightTR + self.player1HeightBR)/2)))
+
+                    self.gapsTeam2.append(((self.player1WidthTM + self.player1WidthBM)/2, self.player1HeightTM))
+                    self.gapsTeam2.append(((self.player1WidthTM + self.player1WidthBM)/2, (self.player1HeightTM + self.player1HeightBM)/2))
+                    self.gapsTeam2.append(((self.player1WidthTM - distance3/2, self.player1HeightTM)))
+                    self.gapsTeam2.append(((self.player1WidthTM + distance3/2, self.player1HeightTM)))
+                    self.gapsTeam2.append(((self.player1WidthTM, self.player1HeightTM + distance3/2)))
+                    self.gapsTeam2.append(((self.player1WidthTM, self.player1HeightTM - distance3/2)))
+                    self.gapsTeam2.append(((self.player1WidthTM, (self.player1HeightTM + self.player1HeightBM)/2)))
+                    if Match.ballIntersectsTeam2(self):
+                        if MatchOptions.difficulty == "Easy" or MatchOptions.difficulty == "Medium":
+                            self.ballWidth , self.ballHeight = random.choice(self.gapsTeam2)
+                        elif MatchOptions.difficulty == "Hard":
+                            self.ballWidth , self.ballHeight = max(self.gapsTeam2)
+                else:
+                    distance1 = int(Match.distance(self.player2WidthTL, self.player2HeightTL,
+                                            self.player2WidthBL, self.player2HeightBL))
+                    distance2 = int(Match.distance(self.player2WidthTR, self.player2HeightTR,
+                                self.player2WidthBR, self.player2HeightBR))
+                    distance3 = int(Match.distance(self.player2WidthTM, self.player2HeightTM,
+                                self.player2WidthBM, self.player2HeightBM))
+                    self.gapsTeam2.append(((self.player2WidthTL + self.player2WidthBL)/2, self.player2HeightTL))
+                    self.gapsTeam2.append(((self.player2WidthTL + self.player2WidthBL)/2, (self.player2HeightTL + self.player2HeightBL)/2))
+                    self.gapsTeam2.append(((self.player2WidthTL - distance1/2, self.player2HeightTL)))
+                    self.gapsTeam2.append(((self.player2WidthTL + distance1/2, self.player2HeightTL)))
+                    self.gapsTeam2.append(((self.player2WidthTL, self.player2HeightTL + distance1/2)))
+                    self.gapsTeam2.append(((self.player2WidthTL, self.player2HeightTL - distance1/2)))
+                    self.gapsTeam2.append(((self.player2WidthTL, (self.player2HeightTL + self.player2HeightBL)/2)))
+
+                    self.gapsTeam2.append(((self.player2WidthTR + self.player2WidthBR)/2, self.player2HeightTR))
+                    self.gapsTeam2.append(((self.player2WidthTR + self.player2WidthBR)/2, (self.player2HeightTR + self.player2HeightBR)/2))
+                    self.gapsTeam2.append(((self.player2WidthTR - distance2/2, self.player2HeightTR)))
+                    self.gapsTeam2.append(((self.player2WidthTR + distance2/2, self.player2HeightTR)))
+                    self.gapsTeam2.append(((self.player2WidthTR, self.player2HeightTR + distance2/2)))
+                    self.gapsTeam2.append(((self.player2WidthTR, self.player2HeightTR - distance2/2)))
+                    self.gapsTeam2.append(((self.player2WidthTR, (self.player2HeightTR + self.player2HeightBR)/2)))
+
+                    self.gapsTeam2.append(((self.player2WidthTM + self.player2WidthBM)/2, self.player2HeightTM))
+                    self.gapsTeam2.append(((self.player2WidthTM + self.player2WidthBM)/2, (self.player2HeightTM + self.player2HeightBM)/2))
+                    self.gapsTeam2.append(((self.player2WidthTM - distance3/2, self.player2HeightTM)))
+                    self.gapsTeam2.append(((self.player2WidthTM + distance3/2, self.player2HeightTM)))
+                    self.gapsTeam2.append(((self.player2WidthTM, self.player2HeightTM + distance3/2)))
+                    self.gapsTeam2.append(((self.player2WidthTM, self.player2HeightTM - distance3/2)))
+                    self.gapsTeam2.append(((self.player2WidthTM, (self.player2HeightTM + self.player2HeightBM)/2)))
+                    if Match.ballIntersectsTeam1(self):
+                        if MatchOptions.difficulty == "Easy" or MatchOptions.difficulty == "Medium":
+                            self.ballWidth , self.ballHeight = random.choice(self.gapsTeam1)
+                        elif MatchOptions.difficulty == "Hard":
+                            self.ballWidth , self.ballHeight = max(self.gapsTeam1)
+
                 self.ballVx *= 2
                 self.ballVy *= 1.1
 
     def receive(self):
-        self.touchCount += 1
         if self.ballY >= self.ballHeight:
-            if Match.ballIntersectsTeam2(self):
-                self.ballVx = -self.ballVx
-            elif Match.ballIntersectsTeam1(self):
-                self.ballVx = self.ballVx
-            if MatchOptions.PlayerCount == 2:
-                if (self.dot1WidthBack < self.ballWidth < self.dot1WidthBack + 40
-                    and self.dot1HeightBack-40 < self.ballHeight < self.dot1HeightBack):
+                if self.ballWidth < self.width/2 and Match.ballIntersectsTeam1(self):
                     self.ballSpeed = .75 * self.ballSpeed
-                    self.ballVx = .5 * self.ballVx
-                if (self.dot2WidthBack < self.ballWidth < self.dot2WidthBack + 40  
-                    and self.dot2HeightBack-40 < self.ballHeight < self.dot2HeightBack):
+                    self.ballVx = self.ballVx
+                if self.ballWidth > self.width/2 and Match.ballIntersectsTeam2(self):
                     self.ballSpeed = .75 * self.ballSpeed
-                    self.ballVx = .5 * self.ballVx
-
-            elif MatchOptions.PlayerCount == 6:
-                pass
+                    self.ballVx = -self.ballVx
                 
 
 #######Drawing#########
