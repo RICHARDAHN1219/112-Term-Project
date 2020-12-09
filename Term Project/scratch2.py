@@ -608,7 +608,8 @@ class Match(App):
         if self.notServed == False:
             Match.doGage(self)
         elif self.rallyStarts == True and not self.gameOver:
-            Match.moveBall1(self)
+            #Match.moveBall1(self)
+            Match.moveBall2(self)
             Match.doMoveP2AI(self)
             Match.doMoveP1AI(self)
             if self.ballTime < 4:
@@ -886,16 +887,18 @@ class Match(App):
         elif event.key == "3":
             Match.floaterServe(self,event)
         elif event.key == "4":
-            Match.toss(self,event)
+            Match.toss(self)
         elif event.key == "5":
-            Match.spike(self,event)
+            Match.spike(self)
+        elif event.key == "6":
+            Match.receive(self)
         elif event.key == "i":
             self.jumpIsPressed = True
         if self.jumpIsPressed == True:
             if event.key == "1":
-                Match.toss(self, event)
+                Match.toss(self)
             elif event.key == "2":
-                Match.spike(self, event)
+                Match.spike(self)
         if MatchOptions.PlayerCount == 2:
             if Sides.playersInTeam1 != []: 
                 if self.topCount % 2 == 1:
@@ -1010,7 +1013,7 @@ class Match(App):
                         self.fillTeam2BL = "blue"
                         self.fillTeam2BR = "purple"
         if self.touchCount > 0:
-            if (self.ballTime > 3):
+            if (self.ballTime > 4):
                 #if (self.ballY < self.ballHeight):
                     self.rallyStarts = False
                     if self.ballWidth < (self.width/2):
@@ -1321,7 +1324,49 @@ class Match(App):
                         self.dotDx *= 1.5
                         self.dotDy *= 1.5   
         
-    def moveBall1(self):
+    '''def moveBall1(self):
+        #Edge calculation similar to pong    
+        #self.ballWidth += self.dotDx
+        #self.ballHeight += self.dotDy
+        if (self.ballTime < 5): 
+        #if self.ballY >= self.ballHeight:    
+            self.ballWidth += Match.VxCalculator(self, self.ballDt)
+            self.ballHeight -= Match.VyCalculator(self, self.ballDt)  
+            if Match.ballIntersectsTeam1(self):
+                Match.resetBallCalculation(self)
+                self.ballTime = 0
+                self.team1TouchCount += 1
+                self.touchCount += 1
+                if MatchOptions.PlayerCount == 1:
+                     Match.receive(self)
+                if MatchOptions.PlayerCount == 2 or MatchOptions.PlayerCount == 6:
+                    if self.team1TouchCount == 1:
+                        if self.ballY < self.ballHeight:
+                            Match.receive(self)
+                    elif self.team1TouchCount == 2:
+                        Match.toss(self)
+                    elif self.team1TouchCount == 3:
+                        Match.spike(self)    
+            elif Match.ballIntersectsTeam2(self):
+                Match.resetBallCalculation(self)
+                self.ballTime = 0
+                self.team2TouchCount += 1
+                self.touchCount += 1
+                if MatchOptions.PlayerCount == 1:
+                    if self.ballY < self.ballHeight:
+                        Match.receive(self)
+                if MatchOptions.PlayerCount == 2 or MatchOptions.PlayerCount == 6:
+                    if self.team2TouchCount == 1:
+                        Match.receive(self)
+                    elif self.team2TouchCount == 2:
+                        Match.toss(self)
+                    elif self.team2TouchCount == 3:
+                        Match.spike(self)
+                
+        else:
+            self.rallyStarts = False #move on to new rally'''
+        
+    def moveBall2(self):
         #Edge calculation similar to pong    
         #self.ballWidth += self.dotDx
         #self.ballHeight += self.dotDy
@@ -1350,28 +1395,31 @@ class Match(App):
                 self.ballTime = 0
                 if MatchOptions.PlayerCount == 1:
                     self.ballVx = self.ballVx
-
                 elif MatchOptions.PlayerCount == 2:
                     if (self.dot1WidthFront < self.ballWidth < self.dot1WidthFront + 40  
                             and self.dot1HeightFront-40 < self.ballHeight < self.dot1HeightFront):
                         self.team1TouchCount += 1
                         self.touchCount += 1
-                        if self.team1TouchCount == 1:
-                            Match.receive(self)
                         if self.team1TouchCount == 2:
                             Match.toss(self)
+                            self.ballVx = self.ballVx/2
+                            self.ballVy = 0
                         elif self.team1TouchCount == 3:
                             Match.spike(self)
+                            self.ballVx *= 3
+                            self.ballVy = self.ballSpeed*math.sin(math.radians(self.ballAngle*1.1))
                     elif (self.dot1WidthBack < self.ballWidth < self.dot1WidthBack + 40  
                             and self.dot1HeightBack-40 < self.ballHeight < self.dot1HeightBack):
                         self.team1TouchCount += 1
                         self.touchCount += 1
-                        if self.team1TouchCount == 1:
-                            Match.receive(self)
                         if self.team1TouchCount == 2:
                             Match.toss(self)
+                            self.ballVx = self.ballVx/2
+                            self.ballVy = 2
                         elif self.team1TouchCount == 3:
                             Match.spike(self)
+                            self.ballVx *= 1.5
+                            self.ballVy = self.ballSpeed*sin(radians(self.ballAngle*.8))
                         '''self.dotDx = -self.originalDx * .15
                         self.ballWidth = self.dot1WidthBack + 40 + self.ballRadius
                         dToMiddleY = self.ballHeight - (self.dot1HeightBack-40 + self.dot1HeightBack)/2
@@ -1390,24 +1438,32 @@ class Match(App):
                         self.team2TouchCount += 1
                         self.touchCount += 1
                         if self.team2TouchCount == 1:
-                            Match.receive(self)
+                            self.ballVx = -self.ballVx
                         if self.team2TouchCount == 2:
                             Match.toss(self)
-                        elif self.team2TouchCount == 3:
+                            self.ballVx = -self.ballVx/2
+                            self.ballVy = 0
+                        elif self.team1TouchCount == 3:
                             Match.spike(self)
+                            self.ballVx *= 3
+                            self.ballVy = self.ballSpeed*math.sin(math.radians(self.ballAngle*1.1))
                     elif (self.dot2WidthBack < self.ballWidth < self.dot2WidthBack + 40  
                             and self.dot2HeightBack-40 < self.ballHeight < self.dot2HeightBack):
                         self.team2TouchCount += 1
                         self.touchCount += 1
                         if self.team2TouchCount == 1:
-                            Match.receive(self)
+                            self.ballVx = -self.ballVx
                         if self.team2TouchCount == 2:
                             Match.toss(self)
+                            self.ballVx = -self.ballVx/2
+                            self.ballVy = 2
                         elif self.team2TouchCount == 3:
                             Match.spike(self)
+                            self.ballVx *= 1.5
+                            self.ballVy = self.ballSpeed*sin(radians(self.ballAngle*.8))
         else:
             self.rallyStarts = False
-        
+
     def ballIntersectsTeam1(self):
         if MatchOptions.PlayerCount == 1:
             return ((self.dot1Width <= self.ballWidth <= self.dot1Width + 40) 
@@ -1516,6 +1572,7 @@ class Match(App):
                 Match.resetGage(self)
             self.ballHeight -= 15
 
+######## Move Ai's #########
     def movePlayer1AI(self):
         if Match.distance(self.ballWidth, self.ballHeight, self.dot1WidthFront, self.dot1HeightFront) < 5 and self.team1TouchCount == 0:
             self.dot1WidthFront += 20
@@ -2039,6 +2096,7 @@ class Match(App):
     def distance(x0,y0,x1,y1):
         return math.sqrt(((x0-x1)**2)+((y0-y1)**2) )
 
+######## Volleyball moves
     def topSpinServe(self, event):
         self.rallyStarts = True
         self.gageActivates = not self.gageActivates
@@ -2064,7 +2122,6 @@ class Match(App):
         self.dotDy = random.randint(-3, -1)
 
     def toss(self):
-        self.touchCount += 1
         #if setter top or bottom index:
                 #ballHeight = middleplayerHeight
                 #ballHeight = middleplayerWidth
@@ -2075,90 +2132,108 @@ class Match(App):
         distanceBallFront1 = Match.distance(self.dot1WidthFront, self.dot1HeightFront, self.ballWidth, self.ballHeight)
         distanceBallBack2 = Match.distance(self.dot2WidthBack, self.dot2HeightBack, self.ballWidth, self.ballHeight)
         distanceBallFront2 = Match.distance(self.dot2WidthFront, self.dot2HeightFront, self.ballWidth, self.ballHeight)
-        if MatchOptions.PlayerCount == 2:
-            if self.ballWidth > self.width/2:
-                if distanceBallFront2 < distanceBallBack2:
-                    if not (self.dot2WidthBack < self.ballWidth < self.dot2WidthBack + 40  
-                    and self.dot2HeightBack-40 < self.ballHeight < self.dot2HeightBack):
-                        self.ballSpeed = .25 * self.ballSpeed
-                        self.ballAngle = 80
-                elif distanceBallFront2 > distanceBallBack2:
-                    if not (self.dot2WidthFront < self.ballWidth < self.dot2WidthFront + 40  
-                    and self.dot2HeightFront-40 < self.ballHeight < self.dot2HeightFront):
-                        self.ballSpeed = .25 * self.ballSpeed
-                        self.ballVx = -self.ballVx
-                        self.ballAngle = 80
-            elif self.ballWidth < self.width/2:
-                if distanceBallFront1 < distanceBallBack1:
-                    if not (self.dot1WidthBack < self.ballWidth < self.dot1WidthBack + 40  
-                    and self.dot1HeightBack-40 < self.ballHeight < self.dot1HeightBack):
-                        self.ballSpeed = .25 * self.ballSpeed
-                        self.ballAngle = 80
-                elif distanceBallFront1 > distanceBallBack1:
-                    if not (self.dot1WidthFront < self.ballWidth < self.dot1WidthFront + 40  
-                    and self.dot1HeightFront-40 < self.ballHeight < self.dot1HeightFront):
-                        self.ballSpeed = .25 * self.ballSpeed
-                        self.ballVx = -self.ballVx
-                        self.ballAngle = 80
-            self.ballSpeed = self.ballSpeed * .9
+        if self.ballY >= self.ballHeight * 1.5:
+            if MatchOptions.PlayerCount == 2:
+                if self.ballWidth > self.width/2:
+                    if distanceBallFront2 < distanceBallBack2:
+                        if not (self.dot2WidthBack < self.ballWidth < self.dot2WidthBack + 40  
+                        and self.dot2HeightBack-40 < self.ballHeight < self.dot2HeightBack):
+                            self.ballSpeed = .25 * self.ballSpeed
+                            self.ballAngle = 80
+                    elif distanceBallFront2 > distanceBallBack2:
+                        if not (self.dot2WidthFront < self.ballWidth < self.dot2WidthFront + 40  
+                        and self.dot2HeightFront-40 < self.ballHeight < self.dot2HeightFront):
+                            self.ballSpeed = .25 * self.ballSpeed
+                            self.ballVx = -self.ballVx
+                            self.ballAngle = 80
+                elif self.ballWidth < self.width/2:
+                    if distanceBallFront1 < distanceBallBack1:
+                        if not (self.dot1WidthBack < self.ballWidth < self.dot1WidthBack + 40  
+                        and self.dot1HeightBack-40 < self.ballHeight < self.dot1HeightBack):
+                            self.ballSpeed = .25 * self.ballSpeed
+                            self.ballAngle = 80
+                    elif distanceBallFront1 > distanceBallBack1:
+                        if not (self.dot1WidthFront < self.ballWidth < self.dot1WidthFront + 40  
+                        and self.dot1HeightFront-40 < self.ballHeight < self.dot1HeightFront):
+                            self.ballSpeed = .25 * self.ballSpeed
+                            self.ballVx = -self.ballVx
+                            self.ballAngle = 80
+                self.ballSpeed = self.ballSpeed * .9
 
     def spike(self):
-        self.touchCount += 1          
-        if MatchOptions.PlayerCount == 2:
-                if self.ballWidth < self.width/2:
-                    distance = int(Match.distance(self.dot1WidthFront, self.dot1HeightFront,
-                                            self.dot1WidthBack, self.dot1HeightBack))
-                    self.gapsTeam2.append(((self.dot1WidthFront + self.dot1WidthBack)/2, self.dot1HeightFront))
-                    self.gapsTeam2.append(((self.dot1WidthFront + self.dot1WidthBack)/2, (self.dot1HeightFront + self.dot1HeightBack)/2))
-                    self.gapsTeam2.append(((self.dot1WidthFront - distance/2, self.dot1HeightFront)))
-                    self.gapsTeam2.append(((self.dot1WidthFront + distance/2, self.dot1HeightFront)))
-                    self.gapsTeam2.append(((self.dot1WidthFront, self.dot1HeightFront + distance/2)))
-                    self.gapsTeam2.append(((self.dot1WidthFront, self.dot1HeightFront - distance/2)))
-                    self.gapsTeam2.append(((self.dot1WidthFront, (self.dot1HeightFront + self.dot1HeightBack)/2)))
-                    if (self.dot2WidthFront < self.ballWidth < self.dot2WidthFront + 40  
-                    and self.dot2HeightFront-40 < self.ballHeight < self.dot2HeightFront):
-                        self.ballWidth , self.ballHeight = random.choice(self.gapsTeam2)
-                    elif (self.dot2WidthBack < self.ballWidth < self.dot2WidthBack + 40  
-                    and self.dot2HeightBack-40 < self.ballHeight < self.dot2HeightBack):
-                        self.ballWidth , self.ballHeight = random.choice(self.gapsTeam2)
-                else:
-                    distance = int(Match.distance(self.dot2WidthFront, self.dot2HeightFront,
-                                            self.dot2WidthBack, self.dot2HeightBack))
-                    self.gapsTeam1.append(((self.dot2WidthFront + self.dot2WidthBack)/2, self.dot2HeightFront))
-                    self.gapsTeam1.append(((self.dot2WidthFront + self.dot2WidthBack)/2, (self.dot2HeightFront + self.dot2HeightBack)/2))
-                    self.gapsTeam1.append(((self.dot2WidthFront - distance/2, self.dot2HeightBack)))
-                    self.gapsTeam1.append(((self.dot2WidthFront + distance/2, self.dot2HeightBack)))
-                    self.gapsTeam1.append(((self.dot2WidthFront, self.dot2HeightFront + distance/2)))
-                    self.gapsTeam1.append(((self.dot2WidthFront, self.dot2HeightFront - distance/2)))
-                    self.gapsTeam1.append(((self.dot2WidthFront, (self.dot2HeightFront + self.dot2HeightBack)/2)))
-                    if (self.dot1WidthFront < self.ballWidth < self.dot1WidthFront + 40  
-                    and self.dot1HeightFront-40 < self.ballHeight < self.dot1HeightFront):
-                        self.ballWidth , self.ballHeight = random.choice(self.gapsTeam1)
-                    elif (self.dot1WidthBack < self.ballWidth < self.dot1WidthBack + 40  
-                    and self.dot1HeightBack-40 < self.ballHeight < self.dot1HeightBack):
-                        self.ballWidth , self.ballHeight = random.choice(self.gapsTeam1)
-                self.ballVx *= 2
-                self.ballVy *= 1.1
+        if self.ballTime < 2:   
+            if MatchOptions.PlayerCount == 2:
+                    if self.ballWidth < self.width/2:
+                        distance = int(Match.distance(self.dot1WidthFront, self.dot1HeightFront,
+                                                self.dot1WidthBack, self.dot1HeightBack))
+                        self.gapsTeam2.append(((self.dot1WidthFront + self.dot1WidthBack)/2, self.dot1HeightFront))
+                        self.gapsTeam2.append(((self.dot1WidthFront + self.dot1WidthBack)/2, (self.dot1HeightFront + self.dot1HeightBack)/2))
+                        self.gapsTeam2.append(((self.dot1WidthFront - distance/2, self.dot1HeightFront)))
+                        self.gapsTeam2.append(((self.dot1WidthFront + distance/2, self.dot1HeightFront)))
+                        self.gapsTeam2.append(((self.dot1WidthFront, self.dot1HeightFront + distance/2)))
+                        self.gapsTeam2.append(((self.dot1WidthFront, self.dot1HeightFront - distance/2)))
+                        self.gapsTeam2.append(((self.dot1WidthFront, (self.dot1HeightFront + self.dot1HeightBack)/2)))
+                        if (self.dot2WidthFront < self.ballWidth < self.dot2WidthFront + 40  
+                        and self.dot2HeightFront-40 < self.ballHeight < self.dot2HeightFront):
+                            self.ballWidth , self.ballHeight = random.choice(self.gapsTeam2)
+                        elif (self.dot2WidthBack < self.ballWidth < self.dot2WidthBack + 40  
+                        and self.dot2HeightBack-40 < self.ballHeight < self.dot2HeightBack):
+                            self.ballWidth , self.ballHeight = random.choice(self.gapsTeam2)
+                    else:
+                        distance = int(Match.distance(self.dot2WidthFront, self.dot2HeightFront,
+                                                self.dot2WidthBack, self.dot2HeightBack))
+                        self.gapsTeam1.append(((self.dot2WidthFront + self.dot2WidthBack)/2, self.dot2HeightFront))
+                        self.gapsTeam1.append(((self.dot2WidthFront + self.dot2WidthBack)/2, (self.dot2HeightFront + self.dot2HeightBack)/2))
+                        self.gapsTeam1.append(((self.dot2WidthFront - distance/2, self.dot2HeightBack)))
+                        self.gapsTeam1.append(((self.dot2WidthFront + distance/2, self.dot2HeightBack)))
+                        self.gapsTeam1.append(((self.dot2WidthFront, self.dot2HeightFront + distance/2)))
+                        self.gapsTeam1.append(((self.dot2WidthFront, self.dot2HeightFront - distance/2)))
+                        self.gapsTeam1.append(((self.dot2WidthFront, (self.dot2HeightFront + self.dot2HeightBack)/2)))
+                        if (self.dot1WidthFront < self.ballWidth < self.dot1WidthFront + 40  
+                        and self.dot1HeightFront-40 < self.ballHeight < self.dot1HeightFront):
+                            self.ballWidth , self.ballHeight = random.choice(self.gapsTeam1)
+                        elif (self.dot1WidthBack < self.ballWidth < self.dot1WidthBack + 40  
+                        and self.dot1HeightBack-40 < self.ballHeight < self.dot1HeightBack):
+                            self.ballWidth , self.ballHeight = random.choice(self.gapsTeam1)
+                    self.ballVx *= 2
+                    self.ballVy *= 1.1
 
     def receive(self):
-        self.touchCount += 1
-        if self.ballY >= self.ballHeight:
+        if self.ballY < self.ballHeight:
+            if Match.ballIntersectsTeam1(self):
+                if MatchOptions.PlayerCount == 1:
+                    self.ballVx = self.ballVx
+                    self.ballWidth = self.dot1Width + 40 + self.ballRadius
+                elif MatchOptions.PlayerCount == 2:
+                    if (self.dot1WidthFront < self.ballWidth < self.dot1WidthFront + 40  
+                                and self.dot1HeightFront-40 < self.ballHeight < self.dot1HeightFront):
+                        self.ballSpeed = .75 * self.ballSpeed
+                        self.ballVx = .5 * self.ballVx
+                        self.ballWidth = self.dot1WidthFront + 40 + self.ballRadius
+                    elif (self.dot1WidthBack < self.ballWidth < self.dot1WidthBack + 40
+                        and self.dot1HeightBack-40 < self.ballHeight < self.dot1HeightBack):
+                        self.ballSpeed = .25 * self.ballSpeed
+                        self.ballVx = .5 * self.ballVx
+                        self.ballWidth = self.dot1WidthBack + 40 + self.ballRadius
+                elif MatchOptions.PlayerCount == 6:
+                    pass
             if Match.ballIntersectsTeam2(self):
-                self.ballVx = -self.ballVx
-            elif Match.ballIntersectsTeam1(self):
-                self.ballVx = self.ballVx
-            if MatchOptions.PlayerCount == 2:
-                if (self.dot1WidthBack < self.ballWidth < self.dot1WidthBack + 40
-                    and self.dot1HeightBack-40 < self.ballHeight < self.dot1HeightBack):
-                    self.ballSpeed = .75 * self.ballSpeed
-                    self.ballVx = .5 * self.ballVx
-                if (self.dot2WidthBack < self.ballWidth < self.dot2WidthBack + 40  
-                    and self.dot2HeightBack-40 < self.ballHeight < self.dot2HeightBack):
-                    self.ballSpeed = .75 * self.ballSpeed
-                    self.ballVx = .5 * self.ballVx
-
-            elif MatchOptions.PlayerCount == 6:
-                pass
+                if MatchOptions.PlayerCount == 1:
+                    self.ballVx = -self.ballVx
+                    self.ballWidth = self.dot2Width - self.ballRadius
+                elif MatchOptions.PlayerCount == 2:
+                    if (self.dot2WidthFront < self.ballWidth < self.dot2WidthFront + 40  
+                        and self.dot2HeightFront-40 < self.ballHeight < self.dot2HeightFront):
+                        self.ballSpeed = .75 * self.ballSpeed
+                        self.ballVx = -.5 * self.ballVx
+                        self.ballWidth = self.dot2WidthFront - self.ballRadius
+                    elif (self.dot2WidthBack < self.ballWidth < self.dot2WidthBack + 40  
+                        and self.dot2HeightBack-40 < self.ballHeight < self.dot2HeightBack):
+                        self.ballSpeed = .25 * self.ballSpeed
+                        self.ballVx = -.5 * self.ballVx
+                        self.ballWidth = self.dot2WidthBack - self.ballRadius
+                elif MatchOptions.PlayerCount == 6:
+                    pass
                 
 
 #######Drawing#########
