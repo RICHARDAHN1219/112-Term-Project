@@ -2949,14 +2949,27 @@ class Tutorials(App):
 
 class Controls(App):
     def appStarted(self):
-        self.controls = ""
+        self.controls = ("Q, J: switch control to the player to the left of the current one in back row \n" 
+        "E, L:  switch control to the player to the left of the current one in front row \n"
+	    "W,UpArrow: Move player up \n"
+	    "S, downArrow: Move player down \n"
+	    "A, LeftArrow: Move player left \n"
+	    "d, rightArrow: move player right \n"
+      	"p: pause the match \n"
+	    "r: reset game \n"
+        "0: End game \n"
+        "1: Topspin serve type 1 \n"
+        "2: Topspin serve type 2 \n"
+	    "3: Floater serve \n"
+        "4: Toss \n"
+        "5: Spike") 
         Tutorials.rulesVolleyball(self)
     def mousePressed(self, event): 
         if event.x >= self.width/2-125 and event.x <= self.width/2+125:
             if  event.y >= self.height/2 + 175 and event.y <= self.height/2 + 225:
                 HomeScreen(width = 1920, height = 1080)
     def drawControls(self, canvas):
-        canvas.create_text(self.width/2, self.height/2 + 100, text = f"{self.controls}", font = "Arial 16 bold")
+        canvas.create_text(self.width/2, self.height/2 - 300, text = f"{self.controls}", font = "Arial 16 bold")
     def drawHomeButton(self, canvas):
         homeButton = canvas.create_rectangle(self.width/2-125, self.height/2 + 175, self.width/2 + 125, self.height/2 + 225,
                             fill = "#f49030", width = 2)
